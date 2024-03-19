@@ -92,6 +92,12 @@ func TestAllAclTests(t *testing.T) {
     testResults.AddResult("ACL - In & Out Bounds Testcase", true, ACLinoutBound("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "In Bound"))
     testResults.AddResult("ACL Configured on Router Testcase", true, Acl_configured_on_router("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any"))
 
-    // Print test summary
-    testResults.PrintSummary()
+    // Print test results
+    for _, result := range testResults {
+        if result.Passed {
+            fmt.Printf("Test '%s' passed.\n", result.TestName)
+        } else {
+            fmt.Printf("Test '%s' failed.\n", result.TestName)
+        }
+    }
 }
