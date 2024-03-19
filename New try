@@ -1,0 +1,18 @@
+func TestConfigureInterfaces(t *testing.T) {
+    deviceIP := "10.133.35.143"
+    intf1 := "Ethernet 1/7"
+    intf1IP := "192.168.60.1/24"
+    intf2 := "Ethernet 1/11"
+    intf2IP := "192.168.3.2/24"
+
+    err := ConfigureInterfacesTestcase(deviceIP, intf1, intf1IP, intf2, intf2IP)
+    // Structured logging to indicate whether the test passed or failed
+    testCaseName := "ConfigureInterfaces"
+    if err != nil {
+        fmt.Printf("%s\t\t\tFAILED\n", testCaseName)
+        t.Errorf("Test %s failed with error: %v", testCaseName, err)
+    } else {
+        fmt.Printf("%s\t\t\tPASSED\n", testCaseName)
+        t.Logf("Test %s passed", testCaseName)
+    }
+}
