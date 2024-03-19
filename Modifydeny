@@ -1,0 +1,58 @@
+package debug
+
+import (
+    "fmt"
+    "golang.org/x/crypto/ssh"
+    "log"
+    "testing"
+    "time"
+)
+
+// TestResult represents the result of a single test.
+type TestResult struct {
+    TestName string
+    Error    error
+}
+
+// TestResults represents a collection of TestResult.
+type TestResults []TestResult
+
+// AddResult adds a TestResult to the TestResults collection.
+func (tr *TestResults) AddResult(testName string, err error) {
+    *tr = append(*tr, TestResult{
+        TestName: testName,
+        Error:    err,
+    })
+}
+
+func ACLDenyonDevices(aclName, rule, bound, interf, ip, pingIP string) error {
+    // Function implementation remains the same as before...
+}
+
+func TestAclDevices(t *testing.T) {
+    var testResults TestResults
+
+    // Uncomment the tests you want to run
+    //err1 := ACLDenyonDevices("aclp1", "permit icmp 192.168.3.2/24 any", "in", "Ethernet1/11", "10.133.35.158", "192.168.3.2")
+    //testResults.AddResult("Test1", err1)
+
+    err2 := ACLDenyonDevices("aclp1", "deny icmp 192.168.3.1/24 any", "in", "Ethernet1/11", "10.133.35.143", "192.168.3.1")
+    testResults.AddResult("Test2", err2)
+
+    // Generate test summary
+    var passedCount, failedCount int
+    for _, result := range testResults {
+        if result.Error != nil {
+            t.Errorf("Test '%s' failed with error: %v", result.TestName, result.Error)
+            failedCount++
+        } else {
+            fmt.Printf("Test '%s' passed.\n", result.TestName)
+            passedCount++
+        }
+    }
+
+    fmt.Printf("\nTest summary:\n")
+    fmt.Printf("Total tests: %d\n", len(testResults))
+    fmt.Printf("Passed: %d\n", passedCount)
+    fmt.Printf("Failed: %d\n", failedCount)
+}
