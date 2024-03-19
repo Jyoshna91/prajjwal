@@ -1,0 +1,698 @@
+package acl
+import "acl/acl_lib"
+import (
+    "fmt"
+    "golang.org/x/crypto/ssh"
+    "log"
+    "testing"
+    "time"
+)
+
+// ------------Configure Interfaces Testcase ------------------
+func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip string, intf2 string, intf2_ip string) error {
+    router1Address := deviceIP
+    routerUsername := "admin"
+    routerPassword := "tcs123"
+    interf1 := intf1
+    interf1_ip := intf1_ip
+    interf2 := intf2
+    interf2_ip := intf2_ip
+
+    executeCommand := "show running-config"
+    fmt.Print("Executing interface configurations testcase\n")
+    config := &ssh.ClientConfig{
+        User: routerUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(routerPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", router1Address+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err != nil {
+        panic(err)
+    }
+    defer session.Close()
+    /modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err := session.Shell(); err != nil {
+        panic(err)
+    }
+
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("interface %s\n", interf1),
+            fmt.Sprintf("no switchport\n"),
+            fmt.Sprintf("no ip address\n"),
+            fmt.Sprintf("ip address %s\n", interf1_ip),
+            fmt.Sprintf("no shutdown\n"),
+            fmt.Sprintf("exit\n"),
+            fmt.Sprintf("interface %s\n", interf2),
+            fmt.Sprintf("no switchport\n"),
+            fmt.Sprintf("no ip address\n"),
+            fmt.Sprintf("ip address %s\n", interf2_ip),
+            fmt.Sprintf("no shutdown\n"),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+//  New Session for command
+    router1Config := &ssh.ClientConfig{
+        User: routerUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(routerPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", router1Address+":22", router1Config)
+    if err != nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+//  Output
+    router1Output, err := router1Session.CombinedOutput(executeCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute command on Router 1: %v", err)
+    }
+    fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
+
+    fmt.Print("Execution ended - Interface configurations testcase\n")
+
+    return nil
+}
+
+
+// Test function
+func Test_Calling_configure_interfaces_testcases(t *testing.T) {
+    err := Configure_Interfaces_testcase("10.133.35.143","Ethernet 1/7", "192.168.60.1/24","Ethernet 1/11","192.168.3.2/24")
+    if err != nil {
+        t.Errorf("Failed to configure interfaces on device: %v", err)
+    }
+}
+
+// ----------- Testcase Ended ------------
+
+
+// ----------- ACL Configuration Testcase ------------------
+func Configure_acl_testcase(deviceIP string, acl_name string, rulee string) error {
+    router1Address := deviceIP
+    routerUsername := "admin"
+    routerPassword := "tcs123"
+    aclName := acl_name
+    rule := rulee
+    executeCommand := "show ip access-lists"
+    fmt.Print("Executing ACL configuration testcase\n")
+
+    config := &ssh.ClientConfig{
+        User: routerUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(routerPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", router1Address+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err != nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err := session.Shell(); err != nil {
+        panic(err)
+    }
+
+//  ACL Configuration
+    commands := []string{
+            "config\n",
+            fmt.Sprintf("ip access-list %s\n", aclName),
+            fmt.Sprintf("%s\n", rule),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+//  New Session for command
+    router1Config := &ssh.ClientConfig{
+        User: routerUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(routerPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", router1Address+":22", router1Config)
+    if err != nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+//  Output
+    router1Output, err := router1Session.CombinedOutput(executeCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute command on Router 1: %v", err)
+    }
+    fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
+    fmt.Print("Execution ended - ACL configuration testcase\n")
+
+//  Validation
+    if strings.Contains(string(router1Output), aclName) {
+        fmt.Println("Success: acl is present on the device\n")
+    }
+
+//  Cleanup
+    acl_lib.Unconfigure_acl_on_device(router1Address, aclName)
+
+    return nil
+}
+
+
+func Test_Calling_Unconfigure_acl(t *testing.T) {
+    err := Configure_acl_testcase("10.133.35.158", "aclp2", "5 permit icmp any any")
+    if err != nil {
+        t.Errorf("Failed to unconfigure ACL on device: %v", err)
+    }
+}
+
+// ----------- Testcase Ended ----------------
+
+
+// ----------- ACL Permit Testcase ------------------
+func ACLPermitonDevices(acl_namee string, rulee string, boundd string, interff string,ip string , ping_ip string)error {
+    acl_name := acl_namee
+    rule := rulee
+    bound := boundd
+    interf := interff
+    serverAddress := ip
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    server2_address := ping_ip
+    executeCommand := "ping "+string(server2_address)
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    // configuration
+    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
+    acl_lib.Configure_acl_on_interface(serverAddress, acl_name, interf, bound)
+
+    fmt.Printf("ACL enabled on device %s %s via %s\n", serverAddress,interf,bound)
+
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    output1, err := session.CombinedOutput(string(executeCommand))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("OUTPUT------ %s\n", output1)
+    
+    //  Validation
+//    if strings.Contains(string(output1), aclName) {
+//        fmt.Println("Success: acl is present on the device\n")
+//    }
+
+    //Cleanup
+    acl_lib.Unconfigure_acl(serverAddress, acl_name, interf, bound)
+
+    return nil
+}
+
+func TestAclPermitDevices(t *testing.T){
+    err := ACLPermitonDevices("acl1234","permit icmp 192.168.3.2/24 any","in","Ethernet1/11","10.133.35.158", "192.168.3.2")
+    if err != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err)
+    }
+}
+
+// ----------- Testcase Ended ----------------
+
+// ----------- ACL Deny Testcase ------------------
+func ACLDenyonDevices(acl_namee string, rulee string, boundd string,interff string,ip string , ping_ip string)error {
+    acl_name := acl_namee
+    rule := rulee
+    bound := boundd
+    interf := interff
+    serverAddress := ip
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    server2_address := ping_ip
+    executeCommand := "ping "+string(server2_address)
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("ip access-list %s\n",acl_name),
+            fmt.Sprintf("%s\n",rule),
+            fmt.Sprintf("exit\n"),
+            fmt.Sprintf("int %s\n",interf),
+            fmt.Sprintf("ip access-group %s %s\n",acl_name,bound),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+    fmt.Printf("ACL enabled on device %s %s via %s\n", serverAddress,interf,bound)
+
+    // new session for ping
+    config1 := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client1, err := ssh.Dial("tcp", serverAddress+":22", config1)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session1, err := client1.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session1.Close()
+
+    modes1 := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session1.RequestPty("vt100", 0, 0, modes1); err != nil {
+        panic(err)
+    }
+
+    output1, err := session1.CombinedOutput(string(executeCommand))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("OUTPUT------ %s\n", output1)
+
+    //  Validation
+//    if strings.Contains(string(output1), aclName) {
+//       fmt.Println("Success: acl is present on the device\n")
+//    }
+
+    return nil
+
+}
+
+func TestAclDenyDevices(t *testing.T){
+/*    err := ACLDenyonDevices("aclp1","permit icmp 192.168.3.2/24 any","in","Ethernet1/11","10.133.35.158", "192.168.3.2")
+    if err != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err)
+    }  */
+    err1 := ACLDenyonDevices("aclp1","deny icmp 192.168.3.1/24 any","in","Ethernet1/11","10.133.35.143", "192.168.3.1")
+    if err1 != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err1)
+    }
+
+}
+
+// ----------- Testcase Ended ----------------
+
+
+// ----------- ACL with Multiple Rules Testcase ------------------
+func ACLWithMultipleRules(acl_namee string, rulee string, boundd string,interff string,ip string , ping_ip string)error {
+    acl_name := acl_namee
+    rule := rulee
+    bound := boundd
+    interf := interff
+    server1Address := ip
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    server2Address := ping_ip
+    executeCommand := "ping "+string(server2Address)
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", server1Address+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("ip access-list %s\n",acl_name),
+            fmt.Sprintf("%s\n",rule),
+            fmt.Sprintf("exit\n"),
+            fmt.Sprintf("int %s\n",interf),
+            fmt.Sprintf("ip access-group %s %s\n",acl_name,bound),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+    fmt.Printf("ACL enabled on device %s %s via %s\n", server1Address, interf, bound)
+
+    //New Session for Ping
+    config1 := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client1, err := ssh.Dial("tcp", server1Address+":22", config1)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session1, err := client1.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session1.Close()
+
+    modes1 := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session1.RequestPty("vt100", 0, 0, modes1); err != nil {
+        panic(err)
+    }
+
+    output1, err := session1.CombinedOutput(string(executeCommand))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("OUTPUT------ %s\n", output1)
+ 
+   //  Validation
+//    if strings.Contains(string(output1), aclName) {
+//       fmt.Println("Success: acl is present on the device\n")
+//    }
+
+    return nil
+}
+
+func TestAclMultipleRulesDevices(t *testing.T){
+    err := ACLWithMultipleRules("aclp2","permit icmp 192.168.3.2/24 any","in","Ethernet1/11","10.133.35.158", "192.168.3.2")
+    if err != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err)
+    }
+    err1 := ACLWithMultipleRules("aclp2","deny icmp 192.168.3.1/24 any","in","Ethernet1/11","10.133.35.143", "192.168.3.1")
+    if err1 != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err1)
+    }
+    err2 := ACLWithMultipleRules("aclp2","deny icmp 192.168.3.1/24 any","in","Ethernet1/11","10.133.35.143", "192.168.3.1")
+    if err2 != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err2)
+    }
+
+}
+
+// ----------- Testcase Ended ----------------
+
+
+// ----------- ACL - In & Out Bounds Testcase --------------
+func ACLinoutBound(acl_namee string, rulee string, boundd string,interff string,ip string , ping_ip string)error {
+    acl_name := acl_namee
+    rule := rulee
+    bound := boundd
+    interf := interff
+    serverAddress := ip
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    server2_address := ping_ip
+    executeCommand := "ping "+string(server2_address)
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("ip access-list %s\n",acl_name),
+            fmt.Sprintf("%s\n",rule),
+            fmt.Sprintf("exit\n"),
+            fmt.Sprintf("int %s\n",interf),
+            fmt.Sprintf("ip access-group %s %s\n",acl_name,bound),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+    fmt.Printf("ACL enabled on device %s %s via %s\n", serverAddress,interf,bound)
+
+    //New Session for Ping
+    config1 := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client1, err := ssh.Dial("tcp", serverAddress+":22", config1)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session1, err := client1.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session1.Close()
+
+    modes1 := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+     if err := session1.RequestPty("vt100", 0, 0, modes1); err != nil {
+        panic(err)
+    }
+
+    out, err := session1.CombinedOutput(string(executeCommand))
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("OUTPUT------ %s\n", out)
+    return nil
+
+}
+
+func TestAclInOutBoundsDevices(t *testing.T){
+    err := ACLinoutBound("aclp2","permit icmp 192.168.3.1/24 any","out","Ethernet1/11","10.133.35.158", "192.168.3.2")
+    if err != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err)
+    }
+    err1 := ACLinoutBound("aclp2","permit icmp 192.168.3.2/24 any","in","Ethernet1/11","10.133.35.143", "192.168.3.1")
+    if err1 != nil {
+        t.Errorf("Failed to enable ACL on device: %v", err1)
+    }
+
+}
+
+// ----------- Testcase Ended ----------------
+
+
+
+// ----------- ACL Configuration Testcase ------------------
+
+
+// ----------- Testcase Ended ----------------
