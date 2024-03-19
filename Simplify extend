@@ -1,0 +1,38 @@
+// TestResult represents the result of a single test.
+type TestResult struct {
+    TestName string
+    Passed   bool
+    Error    error
+}
+
+// TestResults represents a collection of TestResult.
+type TestResults struct {
+    PassedTests []TestResult
+    FailedTests []TestResult
+}
+
+// AddResult adds a TestResult to the appropriate collection in TestResults.
+func (tr *TestResults) AddResult(testName string, passed bool, err error) {
+    result := TestResult{
+        TestName: testName,
+        Passed:   passed,
+        Error:    err,
+    }
+
+    if passed {
+        tr.PassedTests = append(tr.PassedTests, result)
+    } else {
+        tr.FailedTests = append(tr.FailedTests, result)
+    }
+}
+
+// PrintSummary prints the summary of test results.
+func (tr TestResults) PrintSummary() {
+    fmt.Println("\nTest Summary:")
+    for _, result := range tr.PassedTests {
+        fmt.Printf("Test '%s' passed.\n", result.TestName)
+    }
+    for _, result := range tr.FailedTests {
+        fmt.Printf("Test '%s' failed: %v\n", result.TestName, result.Error)
+    }
+}
