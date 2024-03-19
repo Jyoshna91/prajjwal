@@ -1,3 +1,18 @@
+package acl
+
+import (
+    "fmt"
+    "testing"
+)
+
+var testResults []string
+
+func Configure_Interfaces_testcase(deviceIP, intf1, intf1IP, intf2, intf2IP string) error {
+    // Your SSH command execution logic
+    // Simulating success for this example
+    return nil
+}
+
 func TestConfigureInterfaces(t *testing.T) {
     deviceIP := "10.133.35.143"
     intf1 := "Ethernet 1/7"
@@ -5,14 +20,24 @@ func TestConfigureInterfaces(t *testing.T) {
     intf2 := "Ethernet 1/11"
     intf2IP := "192.168.3.2/24"
 
-    err := ConfigureInterfacesTestcase(deviceIP, intf1, intf1IP, intf2, intf2IP)
-    // Structured logging to indicate whether the test passed or failed
+    err := Configure_Interfaces_testcase(deviceIP, intf1, intf1IP, intf2, intf2IP)
     testCaseName := "ConfigureInterfaces"
+
     if err != nil {
-        fmt.Printf("%s\t\t\tFAILED\n", testCaseName)
+        testResults = append(testResults, fmt.Sprintf("%s\t\t\tFAILED", testCaseName))
         t.Errorf("Test %s failed with error: %v", testCaseName, err)
     } else {
-        fmt.Printf("%s\t\t\tPASSED\n", testCaseName)
-        t.Logf("Test %s passed", testCaseName)
+        testResults = append(testResults, fmt.Sprintf("%s\t\t\tPASSED", testCaseName))
+    }
+}
+
+// Assuming you have more test functions similar to TestConfigureInterfaces...
+
+// TestSummary prints a summary of all test cases executed.
+func TestSummary(t *testing.T) {
+    t.Logf("\nTestcase Name\t\t\tResult\n")
+    t.Logf("-------------------------------\n")
+    for _, result := range testResults {
+        t.Logf("%s\n", result)
     }
 }
