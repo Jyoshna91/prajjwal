@@ -1,0 +1,473 @@
+package acl_lib
+
+import (
+    "fmt"
+    "golang.org/x/crypto/ssh"
+//    "log"
+//    "testing"
+    "time"
+)
+
+// Configure Interface--------------------
+func Configure_interface(deviceIP string, intf string, intf_ip string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    interf := intf
+    interf_ip := intf_ip
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    // configure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("interface %s\n", interf),
+            fmt.Sprintf("no switchport\n"),
+            fmt.Sprintf("no ip address\n"),
+            fmt.Sprintf("ip address %s\n", interf_ip),
+            fmt.Sprintf("no shutdown\n"),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// Unconfigure Interface --------------------------
+func Unconfigure_interface(deviceIP string, intf string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    interf := intf
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    // unconfigure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("interface %s\n", interf),
+            fmt.Sprintf("no ip address\n"),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// Configure ACL on Device ----------------------------------------
+func Configure_acl_on_device(deviceIP string, acl_name string, rulee string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    aclName := acl_name
+    rule := rulee
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    // configure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("ip access-list %s\n", aclName),
+            fmt.Sprintf("%s\n", rule),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// Unconfigure acl on device ---------------------------
+func Unconfigure_acl_on_device(deviceIP string, acl_name string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    aclName := acl_name
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    // unconfigure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("no ip access-list %s\n", aclName),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+
+// Configure acl on interface --------------------------------
+func Configure_acl_on_interface(deviceIP string, acl_name string, intf string, boundd string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    aclName := acl_name
+    bound := boundd
+    interf := intf
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+    // configure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("int %s\n", interf),
+            fmt.Sprintf("ip access-group %s %s\n", aclName, bound),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// Unconfigure acl on interface ----------------------------
+func Unconfigure_acl_on_interface(deviceIP string, acl_name string, intf string, boundd string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    aclName := acl_name
+    bound := boundd
+    interf := intf
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+    // unconfigure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("int %s\n", interf),
+	    fmt.Sprintf("no ip access-group %s %s\n", aclName, bound),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+
+// Unconfigure acl (both device and interface) -------------------------
+func Unconfigure_acl(deviceIP string, acl_name string, intf string, boundd string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    aclName := acl_name
+    bound := boundd
+    interf := intf
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+    // unconfigure
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("no ip access-list %s\n", aclName),
+            fmt.Sprintf("int %s\n", interf),
+            fmt.Sprintf("no ip access-group %s %s\n", aclName, bound),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// New Session of Golang - created for reusability
+func New_session(serverAddresss string, serverUsernamee string, serverPasswordd string) error {
+    serverAddress := serverAddresss
+    serverUsername := serverUsernamee
+    serverPassword := serverPasswordd
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+/*
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err := session.Shell(); err !=nil {
+        panic(err)
+    }
+*/
+    return nil
+}
+
+
