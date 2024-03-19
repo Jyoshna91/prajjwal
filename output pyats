@@ -1,3 +1,520 @@
+2024-03-19T12:06:05: %EASYPY-INFO: Starting job run: acl_job
+2024-03-19T12:06:05: %EASYPY-INFO: Runinfo directory: /home/tcs/.pyats/runinfo/acl_job.2024Mar19_12:06:04.198643
+2024-03-19T12:06:05: %EASYPY-INFO: --------------------------------------------------------------------------------
+2024-03-19T12:06:05: %EASYPY-INFO: Testbed file testbed.yaml exists and is readable.
+2024-03-19T12:06:07: %ATS-INFO: Checking all devices are up and ready is disabled, '--check-all-devices-up' must be set to True in case of pyats runs or '-check_all_devices_up' set to True in case of legacy easypy runs
+2024-03-19T12:06:07: %EASYPY-INFO: Starting task execution: Task-1
+2024-03-19T12:06:07: %EASYPY-INFO:     test harness = pyats.aetest
+2024-03-19T12:06:07: %EASYPY-INFO:     testscript   = /home/tcs/anudeep/acl/acl_testcases.py
+2024-03-19T12:06:07: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:07: %AETEST-INFO: |                            Starting common setup                             |
+2024-03-19T12:06:07: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:07: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:07: %AETEST-INFO: |                Starting subsection print_testbed_information                 |
+2024-03-19T12:06:07: %AETEST-INFO: +------------------------------------------------------------------------------+
+> /home/tcs/anudeep/acl/acl_testcases.py(23)print_testbed_information()
+-> uut1 = testbed.devices['dut1']
+(Pdb) c
+2024-03-19T12:06:09: %ROOT-INFO: Device name : n9k1 
+2024-03-19T12:06:09: %ROOT-INFO: Interface : Ethernet1/5
+2024-03-19T12:06:09: %ROOT-INFO: Link : uut1_uut3_1
+2024-03-19T12:06:09: %ROOT-INFO: Device name : n9k4 
+2024-03-19T12:06:09: %ROOT-INFO: Interface : Ethernet1/9
+2024-03-19T12:06:09: %ROOT-INFO: Link : uut2_uut3_1
+2024-03-19T12:06:09: %ROOT-INFO: Device name : n9k3 
+2024-03-19T12:06:09: %ROOT-INFO: Interface : Ethernet1/5
+2024-03-19T12:06:09: %ROOT-INFO: Link : uut3_uut1_1
+2024-03-19T12:06:09: %ROOT-INFO: Interface : Ethernet1/9
+2024-03-19T12:06:09: %ROOT-INFO: Link : uut3_uut2_1
+2024-03-19T12:06:09: %SCRIPT-INFO: Device and interfaces used for acl feature
+2024-03-19T12:06:09: %SCRIPT-INFO: {'n9k1': ['Ethernet1/5'], 'n9k4': ['Ethernet1/9'], 'n9k3': ['Ethernet1/5', 'Ethernet1/9']}
+2024-03-19T12:06:09: %AETEST-INFO: The result of subsection print_testbed_information is => PASSED
+2024-03-19T12:06:09: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:09: %AETEST-INFO: |                    Starting subsection connect_to_devices                    |
+2024-03-19T12:06:09: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:09: %SCRIPT-INFO: Connecting to devices
+> /home/tcs/anudeep/acl/acl_testcases.py(54)connect_to_devices()
+-> for uut in device_list:
+(Pdb) c
+
+2024-03-19 12:06:11,337: %UNICON-INFO: +++ n9k1 logfile /home/tcs/.pyats/runinfo/acl_job.2024Mar19_12:06:04.198643/n9k1-cli-1710830171.log +++
+
+2024-03-19 12:06:11,338: %UNICON-INFO: +++ Unicon plugin nxos +++
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the RSA key sent by the remote host is
+SHA256:gw9u4h1MUeFO20uMu+/8e8o9xGqcr8NyV8yzcNP1phg.
+Please contact your system administrator.
+Add correct host key in /home/tcs/.ssh/known_hosts to get rid of this message.
+Offending RSA key in /home/tcs/.ssh/known_hosts:3
+  remove with:
+  ssh-keygen -f "/home/tcs/.ssh/known_hosts" -R 10.133.35.158
+RSA host key for 10.133.35.158 has changed and you have requested strict checking.
+Host key verification failed.
+
+
+2024-03-19 12:06:11,432: %UNICON-INFO: +++ connection to spawn: ssh -l admin 10.133.35.158 -p 22, id: 140147897094736 +++
+
+2024-03-19 12:06:11,432: %UNICON-INFO: connection to n9k1
+Caught an exception while executing subsection connect_to_devices:
+Traceback (most recent call last):
+  File "src/unicon/eal/backend/pty_backend.py", line 486, in unicon.eal.backend.pty_backend.RawPtySpawn._read
+OSError: [Errno 5] Input/output error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 720, in unicon.statemachine.statemachine.StateMachine.go_to
+  File "src/unicon/statemachine/statetransition.py", line 469, in unicon.statemachine.statetransition.AnyStateTransition.do_transitions
+  File "src/unicon/eal/backend/pty_backend.py", line 340, in unicon.eal.backend.pty_backend.RawSpawn.expect
+  File "src/unicon/eal/backend/pty_backend.py", line 133, in unicon.eal.backend.pty_backend.RawSpawn.read_update_buffer
+  File "src/unicon/eal/backend/pty_backend.py", line 118, in unicon.eal.backend.pty_backend.RawSpawn.read
+  File "src/unicon/eal/backend/pty_backend.py", line 489, in unicon.eal.backend.pty_backend.RawPtySpawn._read
+unicon.core.errors.EOF: ('Unable to read. Connection closed or not available', OSError(5, 'Input/output error'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "src/unicon/bases/connection.py", line 740, in unicon.bases.connection.Connection.connect
+  File "src/unicon/bases/routers/connection_provider.py", line 190, in unicon.bases.routers.connection_provider.BaseSingleRpConnectionProvider.connect
+  File "src/unicon/bases/routers/connection_provider.py", line 217, in unicon.bases.routers.connection_provider.BaseSingleRpConnectionProvider.establish_connection
+  File "src/unicon/statemachine/statemachine.py", line 723, in unicon.statemachine.statemachine.StateMachine.go_to
+unicon.core.errors.StateMachineError: Failed while bringing device to "any" state
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 54, in connect_to_devices
+    for uut in device_list:
+  File "src/pyats/connections/manager.py", line 412, in pyats.connections.manager.ConnectionManager.connect
+  File "src/unicon/bases/connection.py", line 746, in unicon.bases.connection.Connection.connect
+unicon.core.errors.ConnectionError: failed to connect to n9k1
+Failed while bringing device to "any" state
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/bases/connection.py(746)unicon.bases.connection.Connection.connect()
+(Pdb) c
+2024-03-19T12:06:24: %AETEST-ERROR: Caught an exception while executing subsection connect_to_devices:
+2024-03-19T12:06:24: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/eal/backend/pty_backend.py", line 486, in unicon.eal.backend.pty_backend.RawPtySpawn._read
+2024-03-19T12:06:24: %AETEST-ERROR: OSError: [Errno 5] Input/output error
+2024-03-19T12:06:24: %AETEST-ERROR: 
+2024-03-19T12:06:24: %AETEST-ERROR: The above exception was the direct cause of the following exception:
+2024-03-19T12:06:24: %AETEST-ERROR: 
+2024-03-19T12:06:24: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 720, in unicon.statemachine.statemachine.StateMachine.go_to
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/statemachine/statetransition.py", line 469, in unicon.statemachine.statetransition.AnyStateTransition.do_transitions
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/eal/backend/pty_backend.py", line 340, in unicon.eal.backend.pty_backend.RawSpawn.expect
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/eal/backend/pty_backend.py", line 133, in unicon.eal.backend.pty_backend.RawSpawn.read_update_buffer
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/eal/backend/pty_backend.py", line 118, in unicon.eal.backend.pty_backend.RawSpawn.read
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/eal/backend/pty_backend.py", line 489, in unicon.eal.backend.pty_backend.RawPtySpawn._read
+2024-03-19T12:06:24: %AETEST-ERROR: unicon.core.errors.EOF: ('Unable to read. Connection closed or not available', OSError(5, 'Input/output error'))
+2024-03-19T12:06:24: %AETEST-ERROR: 
+2024-03-19T12:06:24: %AETEST-ERROR: The above exception was the direct cause of the following exception:
+2024-03-19T12:06:24: %AETEST-ERROR: 
+2024-03-19T12:06:24: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/bases/connection.py", line 740, in unicon.bases.connection.Connection.connect
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/bases/routers/connection_provider.py", line 190, in unicon.bases.routers.connection_provider.BaseSingleRpConnectionProvider.connect
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/bases/routers/connection_provider.py", line 217, in unicon.bases.routers.connection_provider.BaseSingleRpConnectionProvider.establish_connection
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 723, in unicon.statemachine.statemachine.StateMachine.go_to
+2024-03-19T12:06:24: %AETEST-ERROR: unicon.core.errors.StateMachineError: Failed while bringing device to "any" state
+2024-03-19T12:06:24: %AETEST-ERROR: 
+2024-03-19T12:06:24: %AETEST-ERROR: The above exception was the direct cause of the following exception:
+2024-03-19T12:06:24: %AETEST-ERROR: 
+2024-03-19T12:06:24: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:24: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 54, in connect_to_devices
+2024-03-19T12:06:24: %AETEST-ERROR:     for uut in device_list:
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/pyats/connections/manager.py", line 412, in pyats.connections.manager.ConnectionManager.connect
+2024-03-19T12:06:24: %AETEST-ERROR:   File "src/unicon/bases/connection.py", line 746, in unicon.bases.connection.Connection.connect
+2024-03-19T12:06:24: %AETEST-ERROR: unicon.core.errors.ConnectionError: failed to connect to n9k1
+2024-03-19T12:06:24: %AETEST-ERROR: Failed while bringing device to "any" state
+2024-03-19T12:06:24: %AETEST-INFO: The result of subsection connect_to_devices is => ERRORED
+2024-03-19T12:06:24: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:24: %AETEST-INFO: |            Starting subsection configure_ip_address_to_interfaces            |
+2024-03-19T12:06:24: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:24: %SCRIPT-INFO: Assign ip address to interfaces
+> /home/tcs/anudeep/acl/acl_testcases.py(69)configure_ip_address_to_interfaces()
+-> logger.info(device_info.keys())
+(Pdb) c
+2024-03-19T12:06:26: %SCRIPT-INFO: dict_keys(['n9k1', 'n9k4', 'n9k3'])
+
+2024-03-19 12:06:26,339: %UNICON-INFO: +++ n9k1 with alias 'cli': configure +++
+Caught an exception while executing subsection configure_ip_address_to_interfaces:
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+ValueError: 'generic' is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 69, in configure_ip_address_to_interfaces
+    logger.info(device_info.keys())
+  File "/home/tcs/anudeep/acl/acl_lib.py", line 12, in configure_ip_address
+    device.configure('''int {intf}\n no switchport\nip address {ip_address} {mask}\n no shut\n end'''.format(intf = intf,ip_address = ip_address, mask = mask))
+  File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+    super().pre_service(*args, **kwargs)
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+    from_state = sm.get_state(sm.current_state)
+  File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+unicon.core.errors.StateMachineError: generic state is not registered
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/statemachine/statemachine.py(388)unicon.statemachine.statemachine.StateMachine.get_state()
+(Pdb) c
+2024-03-19T12:06:27: %AETEST-ERROR: Caught an exception while executing subsection configure_ip_address_to_interfaces:
+2024-03-19T12:06:27: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:27: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:27: %AETEST-ERROR: ValueError: 'generic' is not in list
+2024-03-19T12:06:27: %AETEST-ERROR: 
+2024-03-19T12:06:27: %AETEST-ERROR: During handling of the above exception, another exception occurred:
+2024-03-19T12:06:27: %AETEST-ERROR: 
+2024-03-19T12:06:27: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:27: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 69, in configure_ip_address_to_interfaces
+2024-03-19T12:06:27: %AETEST-ERROR:     logger.info(device_info.keys())
+2024-03-19T12:06:27: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_lib.py", line 12, in configure_ip_address
+2024-03-19T12:06:27: %AETEST-ERROR:     device.configure('''int {intf}\n no switchport\nip address {ip_address} {mask}\n no shut\n end'''.format(intf = intf,ip_address = ip_address, mask = mask))
+2024-03-19T12:06:27: %AETEST-ERROR:   File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+2024-03-19T12:06:27: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+2024-03-19T12:06:27: %AETEST-ERROR:     super().pre_service(*args, **kwargs)
+2024-03-19T12:06:27: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+2024-03-19T12:06:27: %AETEST-ERROR:     from_state = sm.get_state(sm.current_state)
+2024-03-19T12:06:27: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:27: %AETEST-ERROR: unicon.core.errors.StateMachineError: generic state is not registered
+2024-03-19T12:06:27: %AETEST-INFO: The result of subsection configure_ip_address_to_interfaces is => ERRORED
+2024-03-19T12:06:27: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:27: %AETEST-INFO: |                   Starting subsection enable_rip_on_device                   |
+2024-03-19T12:06:27: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:27: %ROOT-INFO: Enable rip on devices
+
+2024-03-19 12:06:27,219: %UNICON-INFO: +++ n9k1 with alias 'cli': configure +++
+Caught an exception while executing subsection enable_rip_on_device:
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+ValueError: 'generic' is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 80, in enable_rip_on_device
+    acl_common_functions.enable_rip(uut)
+  File "/home/tcs/anudeep/acl/acl_lib.py", line 18, in enable_rip
+    device.configure('''feature rip\n end''')
+  File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+    super().pre_service(*args, **kwargs)
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+    from_state = sm.get_state(sm.current_state)
+  File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+unicon.core.errors.StateMachineError: generic state is not registered
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/statemachine/statemachine.py(388)unicon.statemachine.statemachine.StateMachine.get_state()
+(Pdb) c
+2024-03-19T12:06:28: %AETEST-ERROR: Caught an exception while executing subsection enable_rip_on_device:
+2024-03-19T12:06:28: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:28: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:28: %AETEST-ERROR: ValueError: 'generic' is not in list
+2024-03-19T12:06:28: %AETEST-ERROR: 
+2024-03-19T12:06:28: %AETEST-ERROR: During handling of the above exception, another exception occurred:
+2024-03-19T12:06:28: %AETEST-ERROR: 
+2024-03-19T12:06:28: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 80, in enable_rip_on_device
+2024-03-19T12:06:28: %AETEST-ERROR:     acl_common_functions.enable_rip(uut)
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_lib.py", line 18, in enable_rip
+2024-03-19T12:06:28: %AETEST-ERROR:     device.configure('''feature rip\n end''')
+2024-03-19T12:06:28: %AETEST-ERROR:   File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+2024-03-19T12:06:28: %AETEST-ERROR:     super().pre_service(*args, **kwargs)
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+2024-03-19T12:06:28: %AETEST-ERROR:     from_state = sm.get_state(sm.current_state)
+2024-03-19T12:06:28: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:28: %AETEST-ERROR: unicon.core.errors.StateMachineError: generic state is not registered
+2024-03-19T12:06:28: %AETEST-INFO: The result of subsection enable_rip_on_device is => ERRORED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                 Starting subsection configure_rip_on_devices                 |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %SCRIPT-INFO: Configure rip on interfaces
+
+2024-03-19 12:06:28,025: %UNICON-INFO: +++ n9k1 with alias 'cli': configure +++
+Caught an exception while executing subsection configure_rip_on_devices:
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+ValueError: 'generic' is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 85, in configure_rip_on_devices
+    acl_common_functions.configure_rip(uut1,device1['intf'])
+  File "/home/tcs/anudeep/acl/acl_lib.py", line 24, in configure_rip
+    device.configure('''int {intf}\n router rip 2\n end'''.format(intf=intf))
+  File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+    super().pre_service(*args, **kwargs)
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+    from_state = sm.get_state(sm.current_state)
+  File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+unicon.core.errors.StateMachineError: generic state is not registered
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/statemachine/statemachine.py(388)unicon.statemachine.statemachine.StateMachine.get_state()
+(Pdb) c
+2024-03-19T12:06:28: %AETEST-ERROR: Caught an exception while executing subsection configure_rip_on_devices:
+2024-03-19T12:06:28: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:28: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:28: %AETEST-ERROR: ValueError: 'generic' is not in list
+2024-03-19T12:06:28: %AETEST-ERROR: 
+2024-03-19T12:06:28: %AETEST-ERROR: During handling of the above exception, another exception occurred:
+2024-03-19T12:06:28: %AETEST-ERROR: 
+2024-03-19T12:06:28: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 85, in configure_rip_on_devices
+2024-03-19T12:06:28: %AETEST-ERROR:     acl_common_functions.configure_rip(uut1,device1['intf'])
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_lib.py", line 24, in configure_rip
+2024-03-19T12:06:28: %AETEST-ERROR:     device.configure('''int {intf}\n router rip 2\n end'''.format(intf=intf))
+2024-03-19T12:06:28: %AETEST-ERROR:   File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+2024-03-19T12:06:28: %AETEST-ERROR:     super().pre_service(*args, **kwargs)
+2024-03-19T12:06:28: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+2024-03-19T12:06:28: %AETEST-ERROR:     from_state = sm.get_state(sm.current_state)
+2024-03-19T12:06:28: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:28: %AETEST-ERROR: unicon.core.errors.StateMachineError: generic state is not registered
+2024-03-19T12:06:28: %AETEST-INFO: The result of subsection configure_rip_on_devices is => ERRORED
+2024-03-19T12:06:28: %AETEST-INFO: The result of common setup is => ERRORED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                    Starting testcase acl_testcase_permit                     |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_permit because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_permit is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                     Starting testcase acl_testcase_deny                      |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_deny because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_deny is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                Starting testcase acl_testcase_multiple_rules                 |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_multiple_rules because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_multiple_rules is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                 Starting testcase acl_testcase_in_out_bound                  |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_in_out_bound because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_in_out_bound is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                  Starting testcase acl_testcase_configured                   |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_configured because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_configured is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                Starting testcase acl_testcase_not_configured                 |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_not_configured because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_not_configured is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |       Starting testcase acl_testcase_check_acl_configured_on_interface       |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_check_acl_configured_on_interface because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_check_acl_configured_on_interface is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |     Starting testcase acl_testcase_check_acl_not_configured_on_interface     |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: Blocking acl_testcase_check_acl_not_configured_on_interface because common_setup did not pass.
+2024-03-19T12:06:28: %AETEST-INFO: The result of testcase acl_testcase_check_acl_not_configured_on_interface is => BLOCKED
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                           Starting common cleanup                            |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %AETEST-INFO: |                Starting subsection unconfigure_rip_on_devices                |
+2024-03-19T12:06:28: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:28: %SCRIPT-INFO: Unconfigure rip on interfaces
+
+2024-03-19 12:06:28,719: %UNICON-INFO: +++ n9k1 with alias 'cli': configure +++
+Caught an exception while executing subsection unconfigure_rip_on_devices:
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+ValueError: 'generic' is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 432, in unconfigure_rip_on_devices
+    acl_common_functions.unconfigure_rip(uut1,device1['intf'])
+  File "/home/tcs/anudeep/acl/acl_lib.py", line 27, in unconfigure_rip
+    device.configure('''int {intf}\n no router rip 2\n end'''.format(intf=intf))
+  File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+    super().pre_service(*args, **kwargs)
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+    from_state = sm.get_state(sm.current_state)
+  File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+unicon.core.errors.StateMachineError: generic state is not registered
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/statemachine/statemachine.py(388)unicon.statemachine.statemachine.StateMachine.get_state()
+(Pdb) c
+2024-03-19T12:06:29: %AETEST-ERROR: Caught an exception while executing subsection unconfigure_rip_on_devices:
+2024-03-19T12:06:29: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:29: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:29: %AETEST-ERROR: ValueError: 'generic' is not in list
+2024-03-19T12:06:29: %AETEST-ERROR: 
+2024-03-19T12:06:29: %AETEST-ERROR: During handling of the above exception, another exception occurred:
+2024-03-19T12:06:29: %AETEST-ERROR: 
+2024-03-19T12:06:29: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 432, in unconfigure_rip_on_devices
+2024-03-19T12:06:29: %AETEST-ERROR:     acl_common_functions.unconfigure_rip(uut1,device1['intf'])
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_lib.py", line 27, in unconfigure_rip
+2024-03-19T12:06:29: %AETEST-ERROR:     device.configure('''int {intf}\n no router rip 2\n end'''.format(intf=intf))
+2024-03-19T12:06:29: %AETEST-ERROR:   File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+2024-03-19T12:06:29: %AETEST-ERROR:     super().pre_service(*args, **kwargs)
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+2024-03-19T12:06:29: %AETEST-ERROR:     from_state = sm.get_state(sm.current_state)
+2024-03-19T12:06:29: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:29: %AETEST-ERROR: unicon.core.errors.StateMachineError: generic state is not registered
+2024-03-19T12:06:29: %AETEST-INFO: The result of subsection unconfigure_rip_on_devices is => ERRORED
+2024-03-19T12:06:29: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:29: %AETEST-INFO: |                  Starting subsection disable_rip_on_device                   |
+2024-03-19T12:06:29: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:29: %ROOT-INFO: disable rip on devices
+
+2024-03-19 12:06:29,418: %UNICON-INFO: +++ n9k1 with alias 'cli': configure +++
+Caught an exception while executing subsection disable_rip_on_device:
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+ValueError: 'generic' is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 441, in disable_rip_on_device
+    acl_common_functions.disable_rip(uut)
+  File "/home/tcs/anudeep/acl/acl_lib.py", line 21, in disable_rip
+    device.configure('''no feature rip\n end''')
+  File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+    super().pre_service(*args, **kwargs)
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+    from_state = sm.get_state(sm.current_state)
+  File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+unicon.core.errors.StateMachineError: generic state is not registered
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/statemachine/statemachine.py(388)unicon.statemachine.statemachine.StateMachine.get_state()
+(Pdb) c
+2024-03-19T12:06:29: %AETEST-ERROR: Caught an exception while executing subsection disable_rip_on_device:
+2024-03-19T12:06:29: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:29: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:29: %AETEST-ERROR: ValueError: 'generic' is not in list
+2024-03-19T12:06:29: %AETEST-ERROR: 
+2024-03-19T12:06:29: %AETEST-ERROR: During handling of the above exception, another exception occurred:
+2024-03-19T12:06:29: %AETEST-ERROR: 
+2024-03-19T12:06:29: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 441, in disable_rip_on_device
+2024-03-19T12:06:29: %AETEST-ERROR:     acl_common_functions.disable_rip(uut)
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_lib.py", line 21, in disable_rip
+2024-03-19T12:06:29: %AETEST-ERROR:     device.configure('''no feature rip\n end''')
+2024-03-19T12:06:29: %AETEST-ERROR:   File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+2024-03-19T12:06:29: %AETEST-ERROR:     super().pre_service(*args, **kwargs)
+2024-03-19T12:06:29: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+2024-03-19T12:06:29: %AETEST-ERROR:     from_state = sm.get_state(sm.current_state)
+2024-03-19T12:06:29: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:29: %AETEST-ERROR: unicon.core.errors.StateMachineError: generic state is not registered
+2024-03-19T12:06:29: %AETEST-INFO: The result of subsection disable_rip_on_device is => ERRORED
+2024-03-19T12:06:29: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:29: %AETEST-INFO: |               Starting subsection unconfigure_ipaddress_device               |
+2024-03-19T12:06:29: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:29: %ROOT-INFO: Unconfig ip address on interfaces of all devices
+
+2024-03-19 12:06:29,823: %UNICON-INFO: +++ n9k1 with alias 'cli': configure +++
+Caught an exception while executing subsection unconfigure_ipaddress_device:
+Traceback (most recent call last):
+  File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+ValueError: 'generic' is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/tcs/anudeep/acl/acl_testcases.py", line 446, in unconfigure_ipaddress_device
+    acl_common_functions.unconfigure_ip_address(uut1,device1['intf'])
+  File "/home/tcs/anudeep/acl/acl_lib.py", line 15, in unconfigure_ip_address
+    device.configure('''int {intf}\n no ip address\n end'''.format(intf=intf))
+  File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+    super().pre_service(*args, **kwargs)
+  File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+    from_state = sm.get_state(sm.current_state)
+  File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+unicon.core.errors.StateMachineError: generic state is not registered
+
+Entering PDB...
+> /home/tcs/anudeep/acl/src/unicon/statemachine/statemachine.py(388)unicon.statemachine.statemachine.StateMachine.get_state()
+(Pdb) c
+2024-03-19T12:06:30: %AETEST-ERROR: Caught an exception while executing subsection unconfigure_ipaddress_device:
+2024-03-19T12:06:30: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:30: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 386, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:30: %AETEST-ERROR: ValueError: 'generic' is not in list
+2024-03-19T12:06:30: %AETEST-ERROR: 
+2024-03-19T12:06:30: %AETEST-ERROR: During handling of the above exception, another exception occurred:
+2024-03-19T12:06:30: %AETEST-ERROR: 
+2024-03-19T12:06:30: %AETEST-ERROR: Traceback (most recent call last):
+2024-03-19T12:06:30: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_testcases.py", line 446, in unconfigure_ipaddress_device
+2024-03-19T12:06:30: %AETEST-ERROR:     acl_common_functions.unconfigure_ip_address(uut1,device1['intf'])
+2024-03-19T12:06:30: %AETEST-ERROR:   File "/home/tcs/anudeep/acl/acl_lib.py", line 15, in unconfigure_ip_address
+2024-03-19T12:06:30: %AETEST-ERROR:     device.configure('''int {intf}\n no ip address\n end'''.format(intf=intf))
+2024-03-19T12:06:30: %AETEST-ERROR:   File "src/unicon/bases/routers/services.py", line 253, in unicon.bases.routers.services.BaseService.__call__
+2024-03-19T12:06:30: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/nxos/service_implementation.py", line 106, in pre_service
+2024-03-19T12:06:30: %AETEST-ERROR:     super().pre_service(*args, **kwargs)
+2024-03-19T12:06:30: %AETEST-ERROR:   File "/home/tcs/.local/lib/python3.8/site-packages/unicon/plugins/generic/service_implementation.py", line 817, in pre_service
+2024-03-19T12:06:30: %AETEST-ERROR:     from_state = sm.get_state(sm.current_state)
+2024-03-19T12:06:30: %AETEST-ERROR:   File "src/unicon/statemachine/statemachine.py", line 388, in unicon.statemachine.statemachine.StateMachine.get_state
+2024-03-19T12:06:30: %AETEST-ERROR: unicon.core.errors.StateMachineError: generic state is not registered
+2024-03-19T12:06:30: %AETEST-INFO: The result of subsection unconfigure_ipaddress_device is => ERRORED
+2024-03-19T12:06:30: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:30: %AETEST-INFO: |                        Starting subsection disconnect                        |
+2024-03-19T12:06:30: %AETEST-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:30: %SCRIPT-INFO: Disconnect the devices
+c
+2024-03-19T12:06:40: %AETEST-INFO: The result of subsection disconnect is => PASSED
+2024-03-19T12:06:40: %AETEST-INFO: The result of common cleanup is => ERRORED
+2024-03-19T12:06:40: %CONTRIB-INFO: WebEx Token not given as argument or in config. No WebEx notification will be sent
+2024-03-19T12:06:40: %EASYPY-INFO: --------------------------------------------------------------------------------
+2024-03-19T12:06:40: %EASYPY-INFO: Job finished. Wrapping up...
+2024-03-19T12:06:41: %EASYPY-INFO: Creating archive file: /home/tcs/.pyats/archive/24-Mar/acl_job.2024Mar19_12:06:04.198643.zip
+2024-03-19T12:06:41: %EASYPY-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:41: %EASYPY-INFO: |                                Easypy Report                                 |
+2024-03-19T12:06:41: %EASYPY-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:41: %EASYPY-INFO: pyATS Instance   : /usr
+2024-03-19T12:06:41: %EASYPY-INFO: Python Version   : cpython-3.8.9 (64bit)
+2024-03-19T12:06:41: %EASYPY-INFO: CLI Arguments    : /home/tcs/.local/bin/pyats run job acl_job.py --testbed-file testbed.yaml
+2024-03-19T12:06:41: %EASYPY-INFO: User             : tcs
+2024-03-19T12:06:41: %EASYPY-INFO: Host Server      : 01HW896031
+2024-03-19T12:06:41: %EASYPY-INFO: Host OS Version  : Ubuntu 16.04 xenial (x86_64)
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO: Job Information
+2024-03-19T12:06:41: %EASYPY-INFO:     Name         : acl_job
+2024-03-19T12:06:41: %EASYPY-INFO:     Start time   : 2024-03-19 12:06:07.629359
+2024-03-19T12:06:41: %EASYPY-INFO:     Stop time    : 2024-03-19 12:06:40.273617
+2024-03-19T12:06:41: %EASYPY-INFO:     Elapsed time : 32.644258
+2024-03-19T12:06:41: %EASYPY-INFO:     Archive      : /home/tcs/.pyats/archive/24-Mar/acl_job.2024Mar19_12:06:04.198643.zip
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO: Total Tasks    : 1 
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO: Overall Stats
+2024-03-19T12:06:41: %EASYPY-INFO:     Passed     : 0
+2024-03-19T12:06:41: %EASYPY-INFO:     Passx      : 0
+2024-03-19T12:06:41: %EASYPY-INFO:     Failed     : 0
+2024-03-19T12:06:41: %EASYPY-INFO:     Aborted    : 0
+2024-03-19T12:06:41: %EASYPY-INFO:     Blocked    : 8
+2024-03-19T12:06:41: %EASYPY-INFO:     Skipped    : 0
+2024-03-19T12:06:41: %EASYPY-INFO:     Errored    : 2
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO:     TOTAL      : 10
 2024-03-19T12:06:41: %EASYPY-INFO: 
 2024-03-19T12:06:41: %EASYPY-INFO: Success Rate   : 0.00 %
 2024-03-19T12:06:41: %EASYPY-INFO: 
@@ -46,4 +563,3 @@ Pro Tip
 -------
    Try the following command to view your logs:
        pyats logs view
-
