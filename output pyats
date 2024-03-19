@@ -1,0 +1,49 @@
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO: Success Rate   : 0.00 %
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:41: %EASYPY-INFO: |                             Task Result Summary                              |
+2024-03-19T12:06:41: %EASYPY-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.common_setup                                       ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_permit                                BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_deny                                  BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_multiple_rules                        BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_in_out_bound                          BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_configured                            BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_not_configured                        BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_check_acl_configured_on_interface     BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.acl_testcase_check_acl_not_configured_on_inte...   BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases.common_cleanup                                     ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: 
+2024-03-19T12:06:41: %EASYPY-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:41: %EASYPY-INFO: |                             Task Result Details                              |
+2024-03-19T12:06:41: %EASYPY-INFO: +------------------------------------------------------------------------------+
+2024-03-19T12:06:41: %EASYPY-INFO: Task-1: acl_testcases
+2024-03-19T12:06:41: %EASYPY-INFO: |-- common_setup                                                         ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: |   |-- print_testbed_information                                         PASSED
+2024-03-19T12:06:41: %EASYPY-INFO: |   |-- connect_to_devices                                               ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: |   |-- configure_ip_address_to_interfaces                               ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: |   |-- enable_rip_on_device                                             ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: |   `-- configure_rip_on_devices                                         ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_permit                                                  BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_deny                                                    BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_multiple_rules                                          BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_in_out_bound                                            BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_configured                                              BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_not_configured                                          BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_check_acl_configured_on_interface                       BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: |-- acl_testcase_check_acl_not_configured_on_interface                   BLOCKED
+2024-03-19T12:06:41: %EASYPY-INFO: `-- common_cleanup                                                       ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO:     |-- unconfigure_rip_on_devices                                       ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO:     |-- disable_rip_on_device                                            ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO:     |-- unconfigure_ipaddress_device                                     ERRORED
+2024-03-19T12:06:41: %EASYPY-INFO:     `-- disconnect                                                        PASSED
+2024-03-19T12:06:41: %EASYPY-INFO: Sending report email...
+2024-03-19T12:06:41: %EASYPY-INFO: Missing SMTP server configuration, or failed to reach/authenticate/send mail. Result notification email failed to send.
+2024-03-19T12:06:41: %EASYPY-INFO: Done!
+
+Pro Tip
+-------
+   Try the following command to view your logs:
+       pyats logs view
+
