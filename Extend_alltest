@@ -1,0 +1,97 @@
+package acl
+
+import (
+    "fmt"
+    "golang.org/x/crypto/ssh"
+    "log"
+    "testing"
+    "time"
+    "strings"
+)
+
+// TestResult represents the result of a single test.
+type TestResult struct {
+    TestName string
+    Passed   bool
+    Error    error
+}
+
+// TestResults represents a collection of TestResult.
+type TestResults []TestResult
+
+// AddResult adds a TestResult to the TestResults collection.
+func (tr *TestResults) AddResult(testName string, passed bool, err error) {
+    *tr = append(*tr, TestResult{
+        TestName: testName,
+        Passed:   passed,
+        Error:    err,
+    })
+}
+
+// PrintSummary prints the summary of test results.
+func (tr TestResults) PrintSummary() {
+    fmt.Println("\nTest Summary:")
+    for _, result := range tr {
+        if result.Error != nil {
+            fmt.Printf("Test '%s' errored: %v\n", result.TestName, result.Error)
+        } else if result.Passed {
+            fmt.Printf("Test '%s' passed.\n", result.TestName)
+        } else {
+            fmt.Printf("Test '%s' failed.\n", result.TestName)
+        }
+    }
+}
+
+// Configure_Interfaces_testcase function...
+
+// Test_Calling_configure_interfaces_testcases function...
+
+// Configure_acl_testcase function...
+
+// Test_Calling_configure_acl function...
+
+// Unconfigure_acl_testcase function...
+
+// Test_Calling_unconfigure_acl function...
+
+// ACLPermitonDevices function...
+
+// TestAclPermitDevices function...
+
+// ACLDenyonDevices function...
+
+// TestAclDenyDevices function...
+
+// ACLWithMultipleRules function...
+
+// TestAclMultipleRulesDevices function...
+
+// ACLinoutBound function...
+
+// TestACLinoutBound function...
+
+// Acl_configured_on_router function...
+
+func TestAclConfiguredOnRouter(t *testing.T) {
+    err := Acl_configured_on_router("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any")
+    if err != nil {
+        t.Errorf("Failed to check ACL configuration on device: %v", err)
+    }
+}
+
+func TestAllAclTests(t *testing.T) {
+    var testResults TestResults
+
+    // Run each test case and record the result
+    testResults.AddResult("Configure Interfaces Testcase", true, Configure_Interfaces_testcase("10.133.35.148","Ethernet 1/1", "192.168.10.1/24","Ethernet 1/5","192.168.5.1/24"))
+    testResults.AddResult("Configure ACL Testcase", true, Configure_acl_testcase("10.133.35.148", "acltemp", "5 permit icmp any any"))
+    testResults.AddResult("Unconfigure ACL Testcase", true, Unconfigure_acl_testcase("10.133.35.148", "acltemp"))
+    testResults.AddResult("ACL Permit Devices Testcase", true, ACLPermitonDevices("10.133.35.150", "acltemp", "10 permit icmp 192.168.10.2/24 any", "in", "ethernet 1/1", "192.168.10.1"))
+    testResults.AddResult("ACL Deny Devices Testcase", true, ACLDenyonDevices("10.133.35.150", "acltemp", "10 deny icmp 192.168.5.1/24 any", "in", "Ethernet1/5", "192.168.5.2"))
+    testResults.AddResult("ACL with Multiple Rules Testcase", true, ACLWithMultipleRules("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "Part 1: Permitting"))
+    testResults.AddResult("ACL - In & Out Bounds Testcase", true, ACLinoutBound("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "In Bound"))
+    testResults.AddResult("ACL Configured on Router Testcase", true, Acl_configured_on_router("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any"))
+
+    // Print test summary
+    testResults.PrintSummary()
+}
