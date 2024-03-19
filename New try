@@ -2,42 +2,57 @@ package acl
 
 import (
     "fmt"
+    "sync"
     "testing"
 )
 
-var testResults []string
+// Global slice and mutex for storing and managing test results safely.
+var (
+    mu          sync.Mutex // Guards testResults
+    testResults []string
+)
 
-func Configure_Interfaces_testcase(deviceIP, intf1, intf1IP, intf2, intf2IP string) error {
-    // Your SSH command execution logic
-    // Simulating success for this example
-    return nil
-}
+// TestConfigure_acl_testcase is an adapted example test case.
+func TestConfigure_acl_testcase(t *testing.T) {
+    // Example parameters for the ACL configuration test case.
+    deviceIP := "10.133.35.158"
+    aclName := "aclp2"
+    rule := "5 permit icmp any any"
 
-func TestConfigureInterfaces(t *testing.T) {
-    deviceIP := "10.133.35.143"
-    intf1 := "Ethernet 1/7"
-    intf1IP := "192.168.60.1/24"
-    intf2 := "Ethernet 1/11"
-    intf2IP := "192.168.3.2/24"
+    // Example call to a hypothetical function that configures ACL and returns an error on failure.
+    // Replace this with your actual test logic.
+    err := Configure_acl_testcase(deviceIP, aclName, rule)
 
-    err := Configure_Interfaces_testcase(deviceIP, intf1, intf1IP, intf2, intf2IP)
-    testCaseName := "ConfigureInterfaces"
-
+    // Record the outcome of the test case.
+    mu.Lock()
+    defer mu.Unlock()
     if err != nil {
-        testResults = append(testResults, fmt.Sprintf("%s\t\t\tFAILED", testCaseName))
-        t.Errorf("Test %s failed with error: %v", testCaseName, err)
+        testResults = append(testResults, fmt.Sprintf("TestConfigure_acl_testcase\t\tFAILED"))
+        t.Errorf("Failed to configure ACL on device: %v", err)
     } else {
-        testResults = append(testResults, fmt.Sprintf("%s\t\t\tPASSED", testCaseName))
+        testResults = append(testResults, fmt.Sprintf("TestConfigure_acl_testcase\t\tPASSED"))
     }
 }
 
-// Assuming you have more test functions similar to TestConfigureInterfaces...
-
-// TestSummary prints a summary of all test cases executed.
+// TestSummary function to print a summary of all test results.
 func TestSummary(t *testing.T) {
-    t.Logf("\nTestcase Name\t\t\tResult\n")
-    t.Logf("-------------------------------\n")
-    for _, result := range testResults {
-        t.Logf("%s\n", result)
-    }
+    t.Cleanup(func() {
+        mu.Lock()
+        defer mu.Unlock()
+        fmt.Println("\nTestcase Name\t\t\t\tResult")
+        fmt.Println("--------------------------------------------------")
+        for _, result := range testResults {
+            fmt.Println(result)
+        }
+    })
+}
+
+// Configure_acl_testcase is a placeholder for your ACL configuration logic.
+// This should be replaced with your actual implementation.
+func Configure_acl_testcase(deviceIP, aclName, rule string) error {
+    // This is where you would implement the logic to configure the ACL on the device.
+    // The function should return an error if the configuration fails.
+    
+    // For demonstration purposes, this is a dummy implementation that always succeeds.
+    return nil
 }
