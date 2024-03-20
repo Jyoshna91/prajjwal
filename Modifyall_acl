@@ -106,6 +106,7 @@ func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip strin
     router1Output, err := router1Session.CombinedOutput(executeCommand)
     if err != nil {
         fmt.Printf("Failed to execute command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
 
@@ -117,7 +118,7 @@ func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip strin
 
 // Test function
 func Test_Calling_configure_interfaces_testcases(t *testing.T) {
-    testCaseName := ":Configure Interfaces"
+    testCaseName := "Configure Interfaces"
     err := Configure_Interfaces_testcase("10.133.35.148","Ethernet 1/1", "192.168.10.1/24","Ethernet 1/5","192.168.5.1/24")
     if err != nil {
         t.Errorf("Test '%s' failed: %v",testCaseName, err)
@@ -220,6 +221,7 @@ func Configure_acl_testcase(deviceIP string, acl_name string, rulee string) erro
     router1Output, err := router1Session.CombinedOutput(executeCommand)
     if err != nil {
         fmt.Printf("Failed to execute command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
 
@@ -330,6 +332,7 @@ func Unconfigure_acl_testcase(deviceIP string, acl_name string) error {
     router1Output, err := router1Session.CombinedOutput(executeCommand)
     if err != nil {
         fmt.Printf("Failed to execute command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
 
     fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
@@ -347,10 +350,14 @@ func Unconfigure_acl_testcase(deviceIP string, acl_name string) error {
 
 
 func Test_Calling_unconfigure_acl(t *testing.T) {
+   testCaseName := "Acl Unconfiguration"
     err := Unconfigure_acl_testcase("10.133.35.148", "acltemp")
     if err != nil {
-        t.Errorf("Failed to configure ACL on device: %v", err)
-    }
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 // ----------- Testcase Ended ----------------
@@ -410,6 +417,7 @@ func ACLPermitonDevices(ip string, acl_namee string, rulee string, boundd string
     output1, err := session.CombinedOutput(string(executeCommand))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("\nPing Statistics------\n%s\n", output1)
 /*
@@ -434,12 +442,16 @@ func ACLPermitonDevices(ip string, acl_namee string, rulee string, boundd string
 }
 
 func TestAclPermitDevices(t *testing.T){
+    testCaseName := "Acl Permit On DEvices"
     err := ACLPermitonDevices("10.133.35.150", "acltemp", "10 permit icmp 192.168.10.2/24 any", "in", "ethernet 1/1", "192.168.10.1")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err)
-    }
-
+     if err != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
 }
+}
+
 
 // ----------- Testcase Ended ----------------
 
@@ -498,6 +510,7 @@ func ACLDenyonDevices(ip string, acl_namee string, rulee string, boundd string, 
     output1, err := session.CombinedOutput(string(executeCommand))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Ping Statistics------\n %s\n", output1)
 
@@ -512,11 +525,17 @@ func ACLDenyonDevices(ip string, acl_namee string, rulee string, boundd string, 
 }
 
 func TestAclDenyDevices(t *testing.T){
+    testCaseName := "Acl deny on devices"
     err1 := ACLDenyonDevices("10.133.35.150", "acltemp", "10 deny icmp 192.168.5.1/24 any", "in", "Ethernet1/5", "192.168.5.2")
-    if err1 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err1)
-    }
+     if err1 != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName, err1)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
 }
+}
+
+    
 
 // ----------- Testcase Ended ----------------
 
@@ -576,6 +595,7 @@ func ACLWithMultipleRules(ip string, acl_namee string, rulee string, boundd stri
     output1, err := session.CombinedOutput(string(executeCommand))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Ping Statistics ------\n %s\n", output1)
 
@@ -589,20 +609,34 @@ func ACLWithMultipleRules(ip string, acl_namee string, rulee string, boundd stri
 }
 
 func TestAclMultipleRulesDevices(t *testing.T){
+    testCaseName := "Acl with Multiple rules-device1"
+  
     err := ACLWithMultipleRules("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "Part 1: Permitting")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err)
-    }
+     if err != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 
+    testCaseName1 := "Acl with Multiple rules-device2"
     err1 := ACLWithMultipleRules("10.133.35.150", "acltemp","deny icmp 192.168.10.2/24 any", "in", "Ethernet1/1", "192.168.10.1", "Part 2: Denying")
-    if err1 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err1)
-    }
+     if err1 != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName1, err1)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
+
+    testCaseName2 := "Acl with Multiple rules-device3"
 
     err2 := ACLWithMultipleRules("10.133.35.152", "acltemp", "deny icmp 192.168.5.2/24 any", "in", "Ethernet1/5", "192.168.5.1", "Part 3: Denying")
-    if err2 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err2)
-    }
+         if err2 != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName2, err2)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 // ----------- Testcase Ended ----------------
@@ -663,6 +697,7 @@ func ACLinoutBound(ip string, acl_namee string, rulee string, boundd string, int
     output1, err := session.CombinedOutput(string(executeCommand))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Ping Statistics ------\n %s\n", output1)
 
@@ -676,17 +711,25 @@ func ACLinoutBound(ip string, acl_namee string, rulee string, boundd string, int
 }
 
 func TestACLinoutBound(t *testing.T){
+    testCaseName := "ACL In - Out Bound - device 1"
     err := ACLinoutBound("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "In Bound")
     if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err)
-    }
-
-    err1 := ACLinoutBound("10.133.35.150", "acltemp","permit icmp 192.168.10.2/24 any", "out", "Ethernet1/1", "192.168.10.1", "Out Bound")
-    if err1 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err1)
-    }
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
 }
 
+    testCaseName1 := "ACL In - Out Bound - device 2"
+    err1 := ACLinoutBound("10.133.35.150", "acltemp","permit icmp 192.168.10.2/24 any", "out", "Ethernet1/1", "192.168.10.1", "Out Bound")
+    if err1 != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName1, err1)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+
+}
+}
 // ----------- Testcase Ended ----------------
 
 
@@ -740,6 +783,7 @@ func Acl_configured_on_router(ip string, acl_namee string, rulee string) error {
     fetching_acls, err := session.CombinedOutput(string(executeCommand1))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     // validating
     match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
@@ -757,10 +801,14 @@ func Acl_configured_on_router(ip string, acl_namee string, rulee string) error {
 }
 
 func Test_Acl_configured_on_router(t *testing.T){
+    testCaseName := "ACL Configured on router"
     err := Acl_configured_on_router("10.133.35.148","acltemp", "10 permit icmp any any")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
+     if err != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 // ----------- Testcase Ended ----------------
@@ -811,6 +859,7 @@ func Acl_not_configured_on_router(ip string, acl_namee string) error {
     fetching_acls, err := session.CombinedOutput(string(executeCommand1))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     // validating
     match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
@@ -831,10 +880,14 @@ func Acl_not_configured_on_router(ip string, acl_namee string) error {
 }
 
 func Test_Acl_not_configured_on_router(t *testing.T){
-    err := Acl_not_configured_on_router("10.133.35.148","acltemp")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
+     testCaseName := "ACL not configured on router"
+     err := Acl_not_configured_on_router("10.133.35.148","acltemp")
+     if err != nil {
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 
@@ -893,6 +946,7 @@ func Acl_configured_on_interface(ip string, acl_namee string, rulee string, boun
     fetching_acls, err := session.CombinedOutput(string(executeCommand))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     // validating
     match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
@@ -912,10 +966,14 @@ func Acl_configured_on_interface(ip string, acl_namee string, rulee string, boun
 }
 
 func Test_Acl_configured_on_interface(t *testing.T){
+    testCaseName := "ACL configured on interface"
     err := Acl_configured_on_interface("10.133.35.148","acltag", "10 permit icmp any any", "out", "ethernet 1/1")
     if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 // ----------- Testcase Ended ----------------
@@ -970,6 +1028,7 @@ func Acl_not_configured_on_interface(ip string, acl_namee string, rulee string, 
     fetching_acls, err := session.CombinedOutput(string(executeCommand))
     if err != nil {
         log.Fatal(err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     // validating
     match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
@@ -990,10 +1049,14 @@ func Acl_not_configured_on_interface(ip string, acl_namee string, rulee string, 
 }
 
 func Test_Acl_not_configured_on_interface(t *testing.T){
+    testCaseName := "Acl not configured on interface"
     err := Acl_not_configured_on_interface("10.133.35.148","acltemp", "10 permit icmp any any", "ethernet 1/1")
     if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
+        t.Errorf("Test '%s' failed: %v",testCaseName, err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 // ----------- Testcase Ended ----------------
@@ -1007,4 +1070,3 @@ func TestMain(m *testing.M) {
     }
     os.Exit(exitVal)
 }
-
