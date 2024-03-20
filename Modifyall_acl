@@ -1064,9 +1064,13 @@ func Test_Acl_not_configured_on_interface(t *testing.T){
 
 func TestMain(m *testing.M) {
     exitVal := m.Run()
-    fmt.Println("\nTest Summary: ")
+    currentTime := time.Now()
+    fmt.Println("-----------------------------------------------------------------")
+    fmt.Printf("%s INFO |          Task Result Summary          |\n", currentTime.Format("2006-01-02 15:04:05"))
+    fmt.Println("-----------------------------------------------------------------")                         
     for testName, result := range testResults {
-        fmt.Printf("%-30s %s\n", testName, result)
+        fmt.Printf("%s INFO: %-50s %s\n", currentTime.Format("2006-01-02 15:04:05"), testName+":", result)
     }
+    fmt.Println("-----------------------------------------------------------------")
     os.Exit(exitVal)
 }
