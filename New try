@@ -1,58 +1,28 @@
-package acl
-
-import (
-    "fmt"
-    "sync"
-    "testing"
-)
-
-// Global slice and mutex for storing and managing test results safely.
-var (
-    mu          sync.Mutex // Guards testResults
-    testResults []string
-)
-
-// TestConfigure_acl_testcase is an adapted example test case.
-func TestConfigure_acl_testcase(t *testing.T) {
-    // Example parameters for the ACL configuration test case.
-    deviceIP := "10.133.35.158"
-    aclName := "aclp2"
-    rule := "5 permit icmp any any"
-
-    // Example call to a hypothetical function that configures ACL and returns an error on failure.
-    // Replace this with your actual test logic.
-    err := Configure_acl_testcase(deviceIP, aclName, rule)
-
-    // Record the outcome of the test case.
-    mu.Lock()
-    defer mu.Unlock()
-    if err != nil {
-        testResults = append(testResults, fmt.Sprintf("TestConfigure_acl_testcase\t\tFAILED"))
-        t.Errorf("Failed to configure ACL on device: %v", err)
-    } else {
-        testResults = append(testResults, fmt.Sprintf("TestConfigure_acl_testcase\t\tPASSED"))
+func TestAclMultipleRulesDevices(t *testing.T) {
+    testCases := []struct {
+        Name         string
+        DeviceIP     string
+        ACLName      string
+        Rule         string
+        Bound        string
+        Interface    string
+        PingIP       string
+        ExpectedFail bool // This flag could be used if you expect the test to fail
+    }{
+        {"ACL With Multiple Rules - Device 1", "10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", false},
+        {"ACL With Multiple Rules - Device 2", "10.133.35.150", "acltemp", "deny icmp 192.168.10.2/24 any", "in", "Ethernet1/1", "192.168.10.3", false},
+        {"ACL With Multiple Rules - Device 3", "10.133.35.152", "acltemp", "deny icmp 192.168.5.2/24 any", "in", "Ethernet1/5", "192.168.5.3", false},
     }
-}
 
-// TestSummary function to print a summary of all test results.
-func TestSummary(t *testing.T) {
-    t.Cleanup(func() {
-        mu.Lock()
-        defer mu.Unlock()
-        fmt.Println("\nTestcase Name\t\t\t\tResult")
-        fmt.Println("--------------------------------------------------")
-        for _, result := range testResults {
-            fmt.Println(result)
-        }
-    })
-}
-
-// Configure_acl_testcase is a placeholder for your ACL configuration logic.
-// This should be replaced with your actual implementation.
-func Configure_acl_testcase(deviceIP, aclName, rule string) error {
-    // This is where you would implement the logic to configure the ACL on the device.
-    // The function should return an error if the configuration fails.
-    
-    // For demonstration purposes, this is a dummy implementation that always succeeds.
-    return nil
+    for _, tc := range testCases {
+        t.Run(tc.Name, func(t *testing.T) {
+            err := ACLWithMultipleRules(tc.DeviceIP, tc.ACLName, tc.Rule, tc.Bound, tc.Interface, tc.PingIP)
+            if (err != nil) != tc.ExpectedFail {
+                t.Errorf("Test '%s' failed: %v", tc.Name, err)
+                testResults[tc.Name] = "FAILED"
+            } else {
+                testResults[tc.Name] = "PASSED"
+            }
+        })
+    }
 }
