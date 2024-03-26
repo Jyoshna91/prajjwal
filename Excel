@@ -1,83 +1,68 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"log"
 	"os"
-	"regexp"
-	"strings"
+	"os/exec"
 
-	"github.com/xuri/excelize/v2"
+	"github.com/tealeg/xlsx"
 )
 
-// Ensure or create the directory where the Excel file will be saved.
-func ensureDirectory(dirPath string) {
-	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
-		err := os.MkdirAll(dirPath, 0755) // Adjust permissions as needed
-		if err != nil {
-			fmt.Printf("Error creating directory: %s\n", err)
-			os.Exit(1)
-		}
-	}
-}
-
-// Extract the test name from the function declaration.
-func getTestName(functionLine string) (string, bool) {
-	re := regexp.MustCompile(`func (Test[\w]+)\(`)
-	match := re.FindStringSubmatch(functionLine)
-	if len(match) > 1 {
-		return match[1], true
-	}
-	return "", false
-}
-
 func main() {
-	sourceFilePath := "/home/tcs/sample/ondatra/debug/acl/newcode_test.go"
-	outputDirPath := "/home/tcs/sample/ondatra/debug/acl/"
-	outputFilePath := outputDirPath + "test_results.xlsx"
-
-	// Ensure the output directory exists
-	ensureDirectory(outputDirPath)
-
-	// Open the source Go test file
-	file, err := os.Open(sourceFilePath)
+	// Loading the test case Excel file
+	testCaseFile, err := xlsx.OpenFile("./testcases.xlsx")
 	if err != nil {
-		fmt.Printf("Failed to open the Go test file: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Failed to open test case file: %v", err)
 	}
-	defer file.Close()
 
-	// Initialize a new Excel file
-	excelFile := excelize.NewFile()
-	sheetName := "Sheet1"
+	// Create a new Excel file for the results
+	resultFile := xlsx.NewFile()
+	resultSheet, err := resultFile.AddSheet("Results")
+	if err != nil {
+		log.Fatalf("Failed to add sheet to result file: %v", err)
+	}
 
-	// Create header row
-	excelFile.SetCellValue(sheetName, "A1", "Test Case")
-	excelFile.SetCellValue(sheetName, "B1", "Result")
+	// Assuming test cases are in the first sheet and start from the second row
+	testCaseSheet := testCaseFile.Sheets[0]
 
-	scanner := bufio.NewScanner(file)
-	row := 2 // Start from the second row; first row is the header
+	// Adding header to the result sheet
+	row := resultSheet.AddRow()
+	cell := row.AddCell()
+	cell.Value = "TestCase"
+	cell = row.AddCell()
+	cell.Value = "Result"
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		if testName, found := getTestName(line); found {
-			// For simplicity, let's assume the result is PASSED. This would be where you implement your logic.
-			excelFile.SetCellValue(sheetName, fmt.Sprintf("A%d", row), testName)
-			excelFile.SetCellValue(sheetName, fmt.Sprintf("B%d", row), "PASSED")
-			row++
+	// Iterate through test cases, skipping the header row
+	for i, row := range testCaseSheet.Rows {
+		if i == 0 { // Skip header row
+			continue
+		}
+
+		testCaseName := row.Cells[0].String()
+		// Here you'd execute your test based on testCaseName. This example just prints it.
+		cmd := exec.Command("echo", fmt.Sprintf("Running Test Case: %s", testCaseName))
+		output, err := cmd.CombinedOutput()
+
+		// Prepare result row
+		resultRow := resultSheet.AddRow()
+		testCaseCell := resultRow.AddCell()
+		testCaseCell.Value = testCaseName
+
+		resultCell := resultRow.AddCell()
+		if err != nil {
+			log.Printf("Error running test case %s: %v\n", testCaseName, err)
+			resultCell.Value = "FAILED"
+		} else {
+			log.Printf("Test case %s output: %s\n", testCaseName, output)
+			resultCell.Value = "PASSED"
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error while reading the file: %v\n", err)
-		os.Exit(1)
+	// Save the result file
+	err = resultFile.Save("./test_result.xlsx")
+	if err != nil {
+		log.Fatalf("Failed to save result file: %v", err)
 	}
-
-	// Save the Excel file
-	if err := excelFile.SaveAs(outputFilePath); err != nil {
-		fmt.Printf("Failed to save the Excel file: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("Excel file has been successfully saved.")
+	fmt.Println("Test cases executed and results saved to test_result.xlsx")
 }
