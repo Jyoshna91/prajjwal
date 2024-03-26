@@ -1,65 +1,77 @@
 package main
 
 import (
-    "bufio"
-    "fmt"
-    "github.com/xuri/excelize/v2"
-    "log"
-    "os"
-    "regexp"
-    "strings"
+	"bufio"
+	"fmt"
+	"github.com/xuri/excelize/v2"
+	"log"
+	"os"
+	"regexp"
+	"strings"
 )
 
-func main() {
-    filePath := "/home/tcs/sample/ondatra/debug/acl/newcode_test.go"
-    excelFilePath := "/home/tcs/sample/ondatra/debug/acl/test_result.xlsx"
-
-    file, err := os.Open(filePath)
-    if err != nil {
-        log.Fatalf("failed to open file: %s", err)
-    }
-    defer file.Close()
-
-    f := excelize.NewFile()
-    f.SetCellValue("Sheet1", "A1", "Test Case Name")
-    f.SetCellValue("Sheet1", "B1", "Result")
-
-    scanner := bufio.NewScanner(file)
-    rowNumber := 2
-
-    for scanner.Scan() {
-        line := scanner.Text()
-        if strings.HasPrefix(line, "func Test") {
-            testName := extractTestName(line)
-            // Assuming test passed as placeholder, adjust based on your actual test result logic
-            result := "PASSED"
-
-            f.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNumber), testName)
-            f.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNumber), result)
-            rowNumber++
-        }
-    }
-
-    if err := scanner.Err(); err != nil {
-        log.Fatalf("error during file scan: %s", err)
-    }
-
-    if err := f.SaveAs(excelFilePath); err != nil {
-        log.Fatal(err)
-    }
-
-    fmt.Printf("Excel file saved as %s\n", excelFilePath)
+// ensureDir checks if a directory exists, and if not, creates it
+func ensureDir(dirName string) error {
+	err := os.MkdirAll(dirName, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // extractTestName parses a line of Go test code to extract the test name
 func extractTestName(line string) string {
-    // Regular expression to match Go test function names
-    re := regexp.MustCompile(`func (Test\w+)\(`)
-    matches := re.FindStringSubmatch(line)
-    if len(matches) > 1 {
-        // matches[1] contains the test name
-        return matches[1]
-    }
-    // Return an empty string if no match is found
-    return ""
+	re := regexp.MustCompile(`func (Test\w+)\(`)
+	matches := re.FindStringSubmatch(line)
+	if len(matches) > 1 {
+		return matches[1] // matches[1] contains the test name
+	}
+	return "" // Return an empty string if no match is found
+}
+
+func main() {
+	filePath := "/home/tcs/sample/ondatra/debug/acl/newcode_test.go"
+	dirPath := "/home/tcs/sample/ondatra/debug/acl/"
+	excelFilePath := dirPath + "test_result.xlsx"
+
+	// Ensure the directory exists
+	if err := ensureDir(dirPath); err != nil {
+		log.Fatalf("failed to create directory: %s", err)
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalf("failed to open file: %s", err)
+	}
+	defer file.Close()
+
+	f := excelize.NewFile()
+	f.SetCellValue("Sheet1", "A1", "Test Case Name")
+	f.SetCellValue("Sheet1", "B1", "Result")
+
+	scanner := bufio.NewScanner(file)
+	rowNumber := 2
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "func Test") {
+			testName := extractTestName(line)
+			result := "PASSED" // Placeholder: You would replace this with your logic to determine the actual result
+
+			f.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNumber), testName)
+			f.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNumber), result)
+			rowNumber++
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("error during file scan: %s", err)
+	}
+
+	// Save the Excel file
+	if err := f.SaveAs(excelFilePath); err != nil {
+		log.Fatalf("failed to save Excel file: %s", err)
+	}
+
+	fmt.Printf("Excel file saved as %s\n", excelFilePath)
 }
