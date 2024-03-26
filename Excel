@@ -1,24 +1,61 @@
-package excel
+package main
 
 import (
-    "github.com/tealeg/xlsx"
-    "testing"
+	"fmt"
+	"github.com/tealeg/xlsx"
+	"your_module_path/acl" // Import your acl package
+	"log"
 )
 
-func TestConnectToRouter67(t *testing.T) {
-    // Create a new Excel file
-    file := xlsx.NewFile()
-    _, err := file.AddSheet("Nping Output")
-    if err != nil {
-        t.Fatalf("Error creating Excel sheet: %v", err)
-    }
+// TestResult represents the outcome of a test case
+type TestResult struct {
+	Description string
+	Passed      bool
+}
 
-    // Save the Excel file
-    filePath := "/home/tcs/sample/ondatra/debug/acl/excel/nping67_output.xlsx"
-    if err := file.Save(filePath); err != nil {
-        t.Fatalf("Error saving Excel file: %v", err)
-    }
+func main() {
+	// Define your test cases here
+	testCases := []func() (string, bool){
+		func() (string, bool) { return acl.TestACLConfiguration("192.168.1.1", "ACL1", "permit icmp any any") },
+		// Add more test cases as needed
+	}
 
-    // Print the path at the end of the output
-    t.Logf("Path for excel: %v", filePath)
+	// Execute test cases and collect results
+	var results []TestResult
+	for _, testCase := range testCases {
+		description, passed := testCase()
+		results = append(results, TestResult{Description: description, Passed: passed})
+	}
+
+	// Generate an Excel report with the results
+	generateExcelReport(results)
+}
+
+func generateExcelReport(results []TestResult) {
+	file := xlsx.NewFile()
+	sheet, err := file.AddSheet("Test Results")
+	if err != nil {
+		log.Fatalf("Failed to add sheet: %s", err)
+	}
+
+	// Adding headers
+	row := sheet.AddRow()
+	row.WriteSlice(&[]string{"Test Description", "Result"}, -1)
+
+	// Populating the sheet with results
+	for _, result := range results {
+		row = sheet.AddRow()
+		passFail := "FAIL"
+		if result.Passed {
+			passFail = "PASS"
+		}
+		row.WriteSlice(&[]string{result.Description, passFail}, -1)
+	}
+
+	// Save the Excel file
+	err = file.Save("Test_Results.xlsx")
+	if err != nil	 {
+		log.Fatalf("Failed to save file: %s", err)
+	}
+	fmt.Println("Saved test results to Test_Results.xlsx")
 }
