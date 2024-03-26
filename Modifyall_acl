@@ -1062,24 +1062,25 @@ func Test_Acl_not_configured_on_interface(t *testing.T){
 // ----------- Testcase Ended ----------------
 
 
-package main
-
-import (
-    "fmt"
-    "os"
-    "testing"
-    "time"
-)
-
-var testResults = make(map[string]string) // Ensure this map is populated in your tests
-
+/*func TestMain(m *testing.M) {
+    exitVal := m.Run()
+    currentTime := time.Now()
+    fmt.Println("-----------------------------------------------------------------------------------")
+    fmt.Printf("%s INFO |                  Task Result Summary                   |\n", currentTime.Format("2006-01-02 15:04:05"))
+    fmt.Println("-----------------------------------------------------------------------------------")                         
+    for testName, result := range testResults {
+        fmt.Printf("%s INFO: %-50s %s\n", currentTime.Format("2006-01-02 15:04:05"), testName+":", result)
+    }
+    fmt.Println("-----------------------------------------------------------------------------------")
+    os.Exit(exitVal)
+}*/
 func TestMain(m *testing.M) {
     exitVal := m.Run()
-
+ 
     // Prepare to summarize test results
     currentTime := time.Now()
-    passedCount, failedCount, erroredCount, blockedCount := 0, 0, 0, 0
-
+   // passedCount, failedCount, erroredCount, blockedCount := 0, 0, 0, 0
+    passedCount, failedCount := 0, 0
     // Tally passed, failed, errored, and blocked tests
     for _, result := range testResults {
         switch result {
@@ -1087,35 +1088,73 @@ func TestMain(m *testing.M) {
             passedCount++
         case "FAILED":
             failedCount++
-        case "ERRORED":
+        /*case "ERRORED":
             erroredCount++
         case "BLOCKED":
             blockedCount++
-        }
+        */}
     }
-
+    TotalTests := passedCount + failedCount
     // Print the summary header
-    fmt.Println("-----------------------------------------------------------------")
-    fmt.Printf("%s INFO |          Test Result Summary          |\n", currentTime.Format("2006-01-02 15:04:05"))
-    fmt.Println("-----------------------------------------------------------------")
+    fmt.Println("--------------------------------------------------------------------------------------")
+    fmt.Printf("%s INFO |                     Task Result Summary                   |\n", currentTime.Format("2006-01-02 15:04:05"))
+    fmt.Println("--------------------------------------------------------------------------------------")
     // Print counts for passed, failed, errored, and blocked tests with headings
-    fmt.Printf("%-30s %10s\n", "Name", "No. of Tests")
-    fmt.Println("-----------------------------------------------------------------")
-    fmt.Printf("%-30s %10d\n", "Passed", passedCount)
-    fmt.Printf("%-30s %10d\n", "Failed", failedCount)
-    fmt.Printf("%-30s %10d\n", "Errored", erroredCount)
-    fmt.Printf("%-30s %10d\n", "Blocked", blockedCount)
-    fmt.Println("-----------------------------------------------------------------")
+    /*fmt.Printf("%-50s %14s\n", "Name", "No. of Tests")
+    fmt.Println("--------------------------------------------------------------------------------------")
+    fmt.Printf("%-50s %10d\n", "Passed", passedCount)
+    fmt.Printf("%-50s %10d\n", "Failed", failedCount)
+    //fmt.Printf("%-50s %10d\n", "Errored", erroredCount)
+    //fmt.Printf("%-50s %10d\n", "Blocked", blockedCount)
+    fmt.Println("--------------------------------------------------------------------------------------")
+    */
+    fmt.Printf ("%s INFO: %-30s %8s\n", currentTime.Format("2006-01-02 15:04:05"), "Metric", "Count")
+    fmt.Println("--------------------------------------------------------------------------------------")
+    fmt.Printf("%s INFO: %-30s %8d\n", currentTime.Format("2006-01-02 15:04:05"), "Passed", passedCount)
+    fmt.Printf("%s INFO: %-30s %8d\n", currentTime.Format("2006-01-02 15:04:05"), "Failed", failedCount)
+    fmt.Println("--------------------------------------------------------------------------------------")
+    fmt.Printf("%s INFO: %-30s %8d\n", currentTime.Format("2006-01-02 15:04:05"), "TOTAL", TotalTests)
+    fmt.Println("--------------------------------------------------------------------------------------")
 
     // Print the task summary
-    fmt.Printf("%s INFO |          Task Summary          |\n", currentTime.Format("2006-01-02 15:04:05"))
-    fmt.Println("-----------------------------------------------------------------")
+    fmt.Printf("%s INFO |                         Task Summary                      |\n", currentTime.Format("2006-01-02 15:04:05"))
+    fmt.Println("--------------------------------------------------------------------------------------")
     for testName, result := range testResults {
         fmt.Printf("%s INFO: %-50s %s\n", currentTime.Format("2006-01-02 15:04:05"), testName+":", result)
     }
-    fmt.Println("-----------------------------------------------------------------")
-
+    fmt.Println("--------------------------------------------------------------------------------------")
+ 
     // Exit with the appropriate status code
     os.Exit(exitVal)
 }
+
+
+
+--------------------------------------------------------------------------------------
+2024-03-26 10:57:38 INFO |                     Task Result Summary                   |
+--------------------------------------------------------------------------------------
+2024-03-26 10:57:38 INFO: Metric                            Count
+--------------------------------------------------------------------------------------
+2024-03-26 10:57:38 INFO: Passed                               11
+2024-03-26 10:57:38 INFO: Failed                                0
+--------------------------------------------------------------------------------------
+2024-03-26 10:57:38 INFO: TOTAL                                11
+--------------------------------------------------------------------------------------
+2024-03-26 10:57:38 INFO |                         Task Summary                      |
+--------------------------------------------------------------------------------------
+2024-03-26 10:57:38 INFO: Acl Permit On DEvices:                             PASSED
+2024-03-26 10:57:38 INFO: Acl with Multiple rules-device1:                   PASSED
+2024-03-26 10:57:38 INFO: ACL In - Out Bound - device 1:                     PASSED
+2024-03-26 10:57:38 INFO: ACL Configured on router:                          PASSED
+2024-03-26 10:57:38 INFO: ACL configured on interface:                       PASSED
+2024-03-26 10:57:38 INFO: Configure Interfaces:                              PASSED
+2024-03-26 10:57:38 INFO: Configure acl testcase:                            PASSED
+2024-03-26 10:57:38 INFO: Acl Unconfiguration:                               PASSED
+2024-03-26 10:57:38 INFO: Acl not configured on interface:                   PASSED
+2024-03-26 10:57:38 INFO: Acl deny on devices:                               PASSED
+2024-03-26 10:57:38 INFO: ACL not configured on router:                      PASSED
+--------------------------------------------------------------------------------------
+ok  	command-line-arguments	192.569s
+
+OUTPUT:
 
