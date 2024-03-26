@@ -1,68 +1,65 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
+	"strings"
 
 	"github.com/tealeg/xlsx"
 )
 
 func main() {
-	// Loading the test case Excel file
-	testCaseFile, err := xlsx.OpenFile("./testcases.xlsx")
+	// Define the path to your Go test file
+	testFilePath := "/Home/tcs/sample/ondatra/debug/ACL/newcode_test.go"
+
+	// Run the Go test and capture the output
+	cmd := exec.Command("go", "test", testFilePath, "-v")
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatalf("Failed to open test case file: %v", err)
+		log.Fatalf("Failed to run go test: %v", err)
 	}
 
-	// Create a new Excel file for the results
-	resultFile := xlsx.NewFile()
-	resultSheet, err := resultFile.AddSheet("Results")
+	// Convert the output to a string for parsing
+	outputStr := string(output)
+
+	// Create a new Excel file
+	file := xlsx.NewFile()
+	sheet, err := file.AddSheet("Test Results")
 	if err != nil {
-		log.Fatalf("Failed to add sheet to result file: %v", err)
+		log.Fatalf("Error creating Excel sheet: %v", err)
 	}
 
-	// Assuming test cases are in the first sheet and start from the second row
-	testCaseSheet := testCaseFile.Sheets[0]
+	// Add headers
+	headerRow := sheet.AddRow()
+	headerRow.AddCell().Value = "Test Case Name"
+	headerRow.AddCell().Value = "Result"
 
-	// Adding header to the result sheet
-	row := resultSheet.AddRow()
-	cell := row.AddCell()
-	cell.Value = "TestCase"
-	cell = row.AddCell()
-	cell.Value = "Result"
+	// Regex to match test case name and result from the go test output
+	regex := regexp.MustCompile(`(?m)^=== RUN\s+(.+)$\n.*?--- (PASS|FAIL):`)
 
-	// Iterate through test cases, skipping the header row
-	for i, row := range testCaseSheet.Rows {
-		if i == 0 { // Skip header row
-			continue
-		}
+	// Use regex to find matches
+	matches := regex.FindAllStringSubmatch(outputStr, -1)
+	for _, match := range matches {
+		if len(match) == 3 {
+			// Add test case name and result to Excel sheet
+			row := sheet.AddRow()
+			testCell := row.AddCell()
+			testCell.Value = match[1] // Test name
 
-		testCaseName := row.Cells[0].String()
-		// Here you'd execute your test based on testCaseName. This example just prints it.
-		cmd := exec.Command("echo", fmt.Sprintf("Running Test Case: %s", testCaseName))
-		output, err := cmd.CombinedOutput()
-
-		// Prepare result row
-		resultRow := resultSheet.AddRow()
-		testCaseCell := resultRow.AddCell()
-		testCaseCell.Value = testCaseName
-
-		resultCell := resultRow.AddCell()
-		if err != nil {
-			log.Printf("Error running test case %s: %v\n", testCaseName, err)
-			resultCell.Value = "FAILED"
-		} else {
-			log.Printf("Test case %s output: %s\n", testCaseName, output)
-			resultCell.Value = "PASSED"
+			resultCell := row.AddCell()
+			resultCell.Value = match[2] // Result (PASS or FAIL)
 		}
 	}
 
-	// Save the result file
-	err = resultFile.Save("./test_result.xlsx")
-	if err != nil {
-		log.Fatalf("Failed to save result file: %v", err)
+	// Save the Excel file
+	filePath := "test_case_results.xlsx"
+	if err := file.Save(filePath); err != nil {
+		log.Fatalf("Error saving Excel file: %v", err)
 	}
-	fmt.Println("Test cases executed and results saved to test_result.xlsx")
+
+	fmt.Printf("Test case results saved to: %s\n", filePath)
 }
