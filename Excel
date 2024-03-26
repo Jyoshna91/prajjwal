@@ -1,65 +1,24 @@
-package main
+package excel
 
 import (
-	"bufio"
-	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"regexp"
-	"strings"
-
-	"github.com/tealeg/xlsx"
+    "github.com/tealeg/xlsx"
+    "testing"
 )
 
-func main() {
-	// Define the path to your Go test file
-	testFilePath := "/Home/tcs/sample/ondatra/debug/ACL/newcode_test.go"
+func TestConnectToRouter67(t *testing.T) {
+    // Create a new Excel file
+    file := xlsx.NewFile()
+    _, err := file.AddSheet("Nping Output")
+    if err != nil {
+        t.Fatalf("Error creating Excel sheet: %v", err)
+    }
 
-	// Run the Go test and capture the output
-	cmd := exec.Command("go", "test", testFilePath, "-v")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("Failed to run go test: %v", err)
-	}
+    // Save the Excel file
+    filePath := "/home/tcs/sample/ondatra/debug/acl/excel/nping67_output.xlsx"
+    if err := file.Save(filePath); err != nil {
+        t.Fatalf("Error saving Excel file: %v", err)
+    }
 
-	// Convert the output to a string for parsing
-	outputStr := string(output)
-
-	// Create a new Excel file
-	file := xlsx.NewFile()
-	sheet, err := file.AddSheet("Test Results")
-	if err != nil {
-		log.Fatalf("Error creating Excel sheet: %v", err)
-	}
-
-	// Add headers
-	headerRow := sheet.AddRow()
-	headerRow.AddCell().Value = "Test Case Name"
-	headerRow.AddCell().Value = "Result"
-
-	// Regex to match test case name and result from the go test output
-	regex := regexp.MustCompile(`(?m)^=== RUN\s+(.+)$\n.*?--- (PASS|FAIL):`)
-
-	// Use regex to find matches
-	matches := regex.FindAllStringSubmatch(outputStr, -1)
-	for _, match := range matches {
-		if len(match) == 3 {
-			// Add test case name and result to Excel sheet
-			row := sheet.AddRow()
-			testCell := row.AddCell()
-			testCell.Value = match[1] // Test name
-
-			resultCell := row.AddCell()
-			resultCell.Value = match[2] // Result (PASS or FAIL)
-		}
-	}
-
-	// Save the Excel file
-	filePath := "test_case_results.xlsx"
-	if err := file.Save(filePath); err != nil {
-		log.Fatalf("Error saving Excel file: %v", err)
-	}
-
-	fmt.Printf("Test case results saved to: %s\n", filePath)
+    // Print the path at the end of the output
+    t.Logf("Path for excel: %v", filePath)
 }
