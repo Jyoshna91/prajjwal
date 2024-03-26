@@ -1,0 +1,141 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"github.com/360EntSecGroup-Skylar/excelize/v2"
+)
+
+func main() {
+	// Path to the test case file
+	testFilePath := "/home/tcs/sample/ondatra/debug/ACL/newcode_test.go"
+
+	// Parse the test case file to get the test results
+	testResults, err := parseTestResults(testFilePath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	// Print test results to the terminal
+	printTestResults(testResults)
+
+	// Generate Excel file with test results
+	excelFilePath := "/home/tcs/sample/ondatra/debug/ACL/test_results.xlsx"
+	err = generateExcelFile(testResults, excelFilePath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println("Excel file generated successfully:", excelFilePath)
+}
+
+// Function to parse the test case file and extract test results
+func parseTestResults(filePath string) (map[string]string, error) {
+	// Open the test case file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Initialize variables to store test results
+	testResults := make(map[string]string)
+	var totalTests, passedTests, failedTests int
+
+	// Scan each line of the file
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Check for lines containing test case results
+		if strings.Contains(line, "Test") {
+			totalTests++
+
+			// Extract test case name and result
+			parts := strings.Split(line, " ")
+			testName := parts[0]
+			result := parts[len(parts)-1]
+
+			// Store test result in map
+			testResults[testName] = result
+
+			// Update passed/failed test counts
+			if result == "PASS" {
+				passedTests++
+			} else if result == "FAIL" {
+				failedTests++
+			}
+		}
+	}
+
+	// Add total test count and success rate to test results
+	testResults["TotalTests"] = strconv.Itoa(totalTests)
+	testResults["PassedTests"] = strconv.Itoa(passedTests)
+	testResults["FailedTests"] = strconv.Itoa(failedTests)
+	testResults["SuccessRate"] = fmt.Sprintf("%.2f%%", float64(passedTests)/float64(totalTests)*100)
+
+	return testResults, nil
+}
+
+// Function to generate Excel file with test results
+func generateExcelFile(testResults map[string]string, filePath string) error {
+	// Create a new Excel file
+	file := excelize.NewFile()
+
+	// Create a new sheet
+	sheetName := "TestResults"
+	index := file.NewSheet(sheetName)
+
+	// Set headers
+	headers := []string{"Test Case", "Result"}
+	for col, header := range headers {
+		cell := excelize.ToAlphaString(col) + "1"
+		file.SetCellValue(sheetName, cell, header)
+	}
+
+	// Write test results to Excel
+	row := 2
+	for testName, result := range testResults {
+		file.SetCellValue(sheetName, fmt.Sprintf("A%d", row), testName)
+		file.SetCellValue(sheetName, fmt.Sprintf("B%d", row), result)
+		row++
+	}
+
+	// Set autofilter for the data
+	err := file.AutoFilter(sheetName, "A1", "B1", "")
+	if err != nil {
+		return err
+	}
+
+	// Set active sheet of the workbook
+	file.SetActiveSheet(index)
+
+	// Save the Excel file
+	err = file.SaveAs(filePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Function to print test results to the terminal
+func printTestResults(testResults map[string]string) {
+	fmt.Println("Test Results:")
+	fmt.Println("-------------")
+	for testName, result := range testResults {
+		fmt.Printf("%s: %s\n", testName, result)
+	}
+
+	fmt.Println("\nTotal Tests:", testResults["TotalTests"])
+	fmt.Println("Passed Tests:", testResults["PassedTests"])
+	fmt.Println("Failed Tests:", testResults["FailedTests"])
+	fmt.Println("Success Rate:", testResults["SuccessRate"])
+}
