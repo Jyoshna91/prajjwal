@@ -1,77 +1,85 @@
-package acl
-import "acl/acl_lib"
+package rip
+import "rip/rip_lib"
 import (
     "fmt"
     "golang.org/x/crypto/ssh"
     "log"
     "testing"
     "time"
-    "regexp"
-    "strings"
 )
 
-// TestResult represents the result of a single test.
-type TestResult struct {
-    TestName string
-    Passed   bool
-    Error    error
-}
+func EnableRiponDevices(deviceIP string, interf string, intf_ip string, ripName string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    intf := interf
+    rip_name := ripName
 
-// TestResults represents a collection of TestResult.
-type TestResults []TestResult
+    fmt.Printf("\nTestcase Started: Enable Rip -----\n")
 
-// AddResult adds a TestResult to the TestResults collection.
-func (tr *TestResults) AddResult(testName string, passed bool, err error) {
-    *tr = append(*tr, TestResult{
-        TestName: testName,
-        Passed:   passed,
-        Error:    err,
-    })
-}
-
-// PrintSummary prints the summary of test results.
-func (tr TestResults) PrintSummary() {
-    fmt.Println("\nTest Summary:")
-    for _, result := range tr {
-        if result.Error != nil {
-            fmt.Printf("Test '%s' errored: %v\n", result.TestName, result.Error)
-        } else if result.Passed {
-            fmt.Printf("Test '%s' passed.\n", result.TestName)
-        } else {
-            fmt.Printf("Test '%s' failed.\n", result.TestName)
-        }
-    }
-}
-
-
-// ------------Configure Interfaces Testcase ------------------
-func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip string, intf2 string, intf2_ip string) error {
-    router1Address := deviceIP
-    routerUsername := "admin"
-    routerPassword := "tcs123"
-    interf1 := intf1
-    interf1_ip := intf1_ip
-    interf2 := intf2
-    interf2_ip := intf2_ip
-
-    executeCommand := "show running-config"
-    fmt.Printf("Testcase: Executing interface configurations------\n")
     config := &ssh.ClientConfig{
-        User: routerUsername,
+        User: serverUsername,
         Auth: []ssh.AuthMethod{
-            ssh.Password(routerPassword),
+            ssh.Password(serverPassword),
         },
         HostKeyCallback: ssh.InsecureIgnoreHostKey(),
     }
 
-    client, err := ssh.Dial("tcp", router1Address+":22", config)
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    // configure
+    rip_lib.Configure_interface_ip(serverAddress, intf, intf_ip)
+    rip_lib.Enable_rip(serverAddress)
+    rip_lib.Configure_rip_on_device(serverAddress, rip_name)
+    rip_lib.Configure_rip_on_interface(serverAddress, intf, rip_name)
+    
+    fmt.Printf("RIP enabled on device %s %s\n", serverAddress,interf)
+
+    fmt.Printf("Testcase Ended -----\n\n")
+    return nil
+}
+
+func TestEnableRip(t *testing.T) {
+//    err2 := EnableRiponDevices("10.133.35.148","Ethernet1/11", "192.168.3.1/24", "riptemp")
+    err3 := EnableRiponDevices("10.133.35.143","Ethernet1/11", "192.168.3.1/24", "riptemp")
+    
+//    if err2 != nil {
+//        t.Errorf("Failed to enable RIP on device: %v", err2)
+//    }
+    if err3 != nil {
+        t.Errorf("Failed to enable RIP on device: %v", err3)
+    }
+}
+
+
+func RipPassive(deviceIP string,interf string, interf_ip string, rip_name string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    OutputCommand := "show ip rip interface "+string(interf)
+
+    fmt.Printf("\nTestcase Started: Rip Passive -----\n")
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
     if err != nil {
         panic(err)
     }
     defer client.Close()
 
     session, err := client.NewSession()
-    if err != nil {
+    if err !=nil {
         panic(err)
     }
     defer session.Close()
@@ -80,7 +88,8 @@ func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip strin
             ssh.TTY_OP_ISPEED: 14400,
             ssh.TTY_OP_OSPEED: 14400,
     }
-     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
         panic(err)
     }
 
@@ -88,23 +97,320 @@ func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip strin
     if err != nil {
         panic(err)
     }
-    if err := session.Shell(); err != nil {
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    //enabling
+    EnableRiponDevices(deviceIP, interf, interf_ip, rip_name)
+    fmt.Printf("RIP %s enabled on device %s %s\n", rip_name, serverAddress,interf)
+
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("interface %s\n",interf),
+            fmt.Sprintf("ip rip passive-interface\n"),
+            fmt.Sprintf("no shutdown\n"),
+	    "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+    // New Session
+    router1Config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", serverAddress+":22", router1Config)
+    if err !=nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+    router1Output, err := router1Session.CombinedOutput(OutputCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+    }
+    fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
+    rip_lib.Validation("passive",string(router1Output))
+    fmt.Printf("Testcase Ended -----\n\n")
+
+    return nil
+}
+
+func TestRipPassive(t *testing.T){
+    err := RipPassive("10.133.35.143","Ethernet1/11", "192.168.3.2/24", "riptemp")
+    if err != nil {
+        t.Errorf("Failed to enable RIP on device: %v", err)
+    } 
+}
+
+
+// Testcase RipTimers -------------
+func RipTimers(deviceIP string, interf string, rip_name string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    OutputCommand := "show ip rip"
+
+    fmt.Printf("\nTestcase Started: Rip Timers -----\n")
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
         panic(err)
     }
 
     commands := []string{
             "conf t\n",
-            fmt.Sprintf("interface %s\n", interf1),
-            fmt.Sprintf("no switchport\n"),
-            fmt.Sprintf("no ip address\n"),
-            fmt.Sprintf("ip address %s\n", interf1_ip),
-            fmt.Sprintf("no shutdown\n"),
+            fmt.Sprintf("router rip %s\n", rip_name),
+            fmt.Sprintf("address-family ipv4 unicast\n"),
+            fmt.Sprintf("timers basic 10 60 60 40\n"),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+    router1Config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", serverAddress+":22", router1Config)
+    if err !=nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+    router1Output, err := router1Session.CombinedOutput(OutputCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+    }
+    fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
+    rip_lib.Validation("Updates every 10 sec, expire in 60 sec",string(router1Output))
+    fmt.Printf("Testcase Ended -----\n\n")
+    return nil
+    
+}
+
+func TestRipTimers(t *testing.T){
+    err := RipTimers("10.133.35.143","Ethernet1/11", "riptemp")
+    if err != nil {
+        t.Errorf("Failed to enable RipTimers on device: %v", err)
+    }
+}
+
+
+func RipDistance(deviceIP string, interf string, rip_name string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    OutputCommand := "show ip rip"
+
+    fmt.Printf("\nTestcase Started: Rip Distance -----\n")
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("router rip %s\n", rip_name),
+            fmt.Sprintf("address-family ipv4 unicast\n"),
+            fmt.Sprintf("distance 100\n"),
+            "end\n",
+    }
+
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+
+    router1Config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", serverAddress+":22", router1Config)
+    if err !=nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+    router1Output, err := router1Session.CombinedOutput(OutputCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+    }
+    fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
+    rip_lib.Validation("Admin-distance: 100",string(router1Output))
+    fmt.Printf("Testcase Ended -----\n\n")
+    return nil
+}
+
+func TestRipDistance(t *testing.T){
+    err := RipDistance("10.133.35.143","Ethernet1/11", "riptemp")
+    if err != nil {
+        t.Errorf("Failed to enable RipDistance on device: %v", err)
+    }
+}
+
+
+func RipAuthentication(deviceIP string, interf string)error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    OutputCommand := "show ip rip interface "+string(interf)
+
+    fmt.Printf("\nTestcase Started: Rip Authentication -----\n")
+
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+        panic(err)
+    }
+
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+
+//    EnableRiponDevices(deviceIP,interf)
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("key chain rip\n"),
+            fmt.Sprintf("key 1\n"),
+            fmt.Sprintf("key-string CISCO\n"),
             fmt.Sprintf("exit\n"),
-            fmt.Sprintf("interface %s\n", interf2),
-            fmt.Sprintf("no switchport\n"),
-            fmt.Sprintf("no ip address\n"),
-            fmt.Sprintf("ip address %s\n", interf2_ip),
-            fmt.Sprintf("no shutdown\n"),
+            fmt.Sprintf("int %s\n",interf),
+            fmt.Sprintf("ip rip authentication key-chain rip\n"),
+            fmt.Sprintf("ip rip authentication mode md5\n"),
             "end\n",
     }
 
@@ -112,372 +418,53 @@ func Configure_Interfaces_testcase(deviceIP string, intf1 string, intf1_ip strin
         sshShell.Write([]byte(cmd))
         time.Sleep(1 * time.Second)
     }
+    fmt.Printf("Rip authentication successfully verified on %s via %s\n",deviceIP,interf)
 
-    //  New Session for command
     router1Config := &ssh.ClientConfig{
-        User: routerUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(routerPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-    router1Client, err := ssh.Dial("tcp", router1Address+":22", router1Config)
-    if err != nil {
-        log.Fatalf("Failed to connect to Router 1: %v", err)
-    }
-    defer router1Client.Close()
-
-    router1Session, err := router1Client.NewSession()
-    if err != nil {
-        log.Fatalf("Failed to create session on Router 1: %v", err)
-
-    }
-    defer router1Session.Close()
-
-    //  Output
-    router1Output, err := router1Session.CombinedOutput(executeCommand)
-    if err != nil {
-        fmt.Printf("Failed to execute command on Router 1: %v", err)
-    }
-    fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
-
-    fmt.Print("Execution ended - Interface configurations testcase------\n\n")
-
-    return nil
-}
-
-
-// Test function
-func Test_Calling_configure_interfaces_testcases(t *testing.T) {
-    err := Configure_Interfaces_testcase("10.133.35.148","Ethernet 1/1", "192.168.10.1/24","Ethernet 1/5","192.168.5.1/24")
-    if err != nil {
-        t.Errorf("Failed to configure interfaces on device: %v", err)
-    }
-}
-
-// ----------- Testcase Ended ------------
-
-
-// ----------- Testcase 1: ACL Configuration ------------------
-func Configure_acl_testcase(deviceIP string, acl_name string, rulee string) error {
-    router1Address := deviceIP
-    routerUsername := "admin"
-    routerPassword := "tcs123"
-    aclName := acl_name
-    rule := rulee
-    executeCommand := "show ip access-lists"
-    fmt.Printf("Testcase 1: Executing Basic ACL configuration\n")
-
-    config := &ssh.ClientConfig{
-        User: routerUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(routerPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-
-    client, err := ssh.Dial("tcp", router1Address+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    session, err := client.NewSession()
-    if err != nil {
-        panic(err)
-    }
-    defer session.Close()
-
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    sshShell, err := session.StdinPipe()
-    if err != nil {
-        panic(err)
-    }
-    if err := session.Shell(); err != nil {
-        panic(err)
-    }
-
-    //  ACL Configuration
-    commands := []string{
-            "config\n",
-            fmt.Sprintf("ip access-list %s\n", aclName),
-            fmt.Sprintf("%s\n", rule),
-            "end\n",
-    }
-
-    for _,cmd := range commands {
-        sshShell.Write([]byte(cmd))
-        time.Sleep(1 * time.Second)
-    }
-
-    //  New Session for command
-    router1Config := &ssh.ClientConfig{
-        User: routerUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(routerPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-    router1Client, err := ssh.Dial("tcp", router1Address+":22", router1Config)
-    if err != nil {
-        log.Fatalf("Failed to connect to Router 1: %v", err)
-    }
-    defer router1Client.Close()
-
-    router1Session, err := router1Client.NewSession()
-    if err != nil {
-        log.Fatalf("Failed to create session on Router 1: %v", err)
-
-    }
-    defer router1Session.Close()
-
-    //  Output
-    router1Output, err := router1Session.CombinedOutput(executeCommand)
-    if err != nil {
-        fmt.Printf("Failed to execute command on Router 1: %v", err)
-    }
-    fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
-
-    //  Validation
-    if strings.Contains(string(router1Output), aclName) {
-        fmt.Printf("Success: ACL Configured\n")
-    }
-    fmt.Print("Execution ended - ACL configuration testcase --------\n\n")
-
-    return nil
-}
-
-
-func Test_Calling_configure_acl(t *testing.T) {
-    err := Configure_acl_testcase("10.133.35.148", "acltemp", "5 permit icmp any any")
-    if err != nil {
-        t.Errorf("Failed to unconfigure ACL on device: %v", err)
-    }
-}
-
-// ----------- Testcase Ended ----------------
-
-// ----------- Testcase 2: ACL Unconfiguration ------------------
-func Unconfigure_acl_testcase(deviceIP string, acl_name string) error {
-    router1Address := deviceIP
-    routerUsername := "admin"
-    routerPassword := "tcs123"
-    aclName := acl_name
-    executeCommand := "show ip access-lists"
-
-    fmt.Printf("Testcase 2: Executing Basic ACL Unconfiguration-----------\n")
-
-    config := &ssh.ClientConfig{
-        User: routerUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(routerPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-
-    client, err := ssh.Dial("tcp", router1Address+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    session, err := client.NewSession()
-    if err != nil {
-        panic(err)
-    }
-    defer session.Close()
-
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    sshShell, err := session.StdinPipe()
-    if err != nil {
-        panic(err)
-    }
-    if err := session.Shell(); err != nil {
-        panic(err)
-    }
-
-    //  ACL Configuration
-    commands := []string{
-            "config\n",
-            fmt.Sprintf("no ip access-list %s\n", aclName),
-//            fmt.Sprintf("%s\n", rule),
-            "end\n",
-    }
-
-    for _,cmd := range commands {
-        sshShell.Write([]byte(cmd))
-        time.Sleep(1 * time.Second)
-    }
-
-    //  New Session for command
-    router1Config := &ssh.ClientConfig{
-        User: routerUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(routerPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-    router1Client, err := ssh.Dial("tcp", router1Address+":22", router1Config)
-    if err != nil {
-        log.Fatalf("Failed to connect to Router 1: %v", err)
-    }
-    defer router1Client.Close()
-
-    router1Session, err := router1Client.NewSession()
-    if err != nil {
-        log.Fatalf("Failed to create session on Router 1: %v", err)
-
-    }
-    defer router1Session.Close()
-
-    //  Output
-    router1Output, err := router1Session.CombinedOutput(executeCommand)
-    if err != nil {
-        fmt.Printf("Failed to execute command on Router 1: %v", err)
-    }
-
-    fmt.Printf("Router 1 - Output:\n%s\n", router1Output)
-
-    //  Validation
-    if strings.Contains(string(router1Output), aclName) {
-        fmt.Printf("Failed: ACL NOT Unconfigured\n")
-    } else {
-	fmt.Printf("Success: ACL unconfigured")
-    }
-    fmt.Print("Execution ended - ACL configuration testcase----------\n\n")
-
-    return nil
-}
-
-
-func Test_Calling_unconfigure_acl(t *testing.T) {
-    err := Unconfigure_acl_testcase("10.133.35.148", "acltemp")
-    if err != nil {
-        t.Errorf("Failed to configure ACL on device: %v", err)
-    }
-}
-
-// ----------- Testcase Ended ----------------
-
-
-// ----------- Testcase 3: ACL Permit ------------------
-func ACLPermitonDevices(ip string, acl_namee string, rulee string, boundd string, interf string, ping_ip string) error {
-    acl_name := acl_namee
-    rule := rulee
-    bound := boundd
-    intf := interf
-    serverAddress := ip
-    serverUsername := "admin"
-    serverPassword := "tcs123"
-    server2_address := ping_ip
-    executeCommand := "ping "+string(server2_address)
-
-    fmt.Printf("Testcase 3: Executing ACL Permit -------\n")
-
-    config := &ssh.ClientConfig{
         User: serverUsername,
         Auth: []ssh.AuthMethod{
             ssh.Password(serverPassword),
         },
         HostKeyCallback: ssh.InsecureIgnoreHostKey(),
     }
-
-    client, err := ssh.Dial("tcp", serverAddress+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // configuration
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-    acl_lib.Configure_acl_on_interface(serverAddress, acl_name, intf, bound)
-
-    fmt.Printf("ACL %s enabled on device %s %s via %s\n", acl_name, serverAddress, intf, bound)
-
-    // new session for ping
-    session, err := client.NewSession()
+    router1Client, err := ssh.Dial("tcp", serverAddress+":22", router1Config)
     if err !=nil {
-        panic(err)
+        log.Fatalf("Failed to connect to Router 1: %v", err)
     }
-    defer session.Close()
+    defer router1Client.Close()
 
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-
-    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    output1, err := session.CombinedOutput(string(executeCommand))
+    router1Session, err := router1Client.NewSession()
     if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("\nPing Statistics------\n%s\n", output1)
-/*
-    // validation
-    match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
-    if match1 == true {
-        fmt.Printf("acl %s  is configured\n", acl_name)
-        fmt.Printf("Failed: acl %s is present and configured on interface %s\n", acl_name, intf)
-    } else {
-        fmt.Printf("acl %s  is NOT configured\n", acl_name)       //main condition for this testcase
-        fmt.Printf("Success: acl %s is NOT present and NOT configured on interface %s\n", acl_name, intf)
-    }
-*/
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-    acl_lib.Unconfigure_acl_on_interface(serverAddress, acl_name, intf, bound)
+        log.Fatalf("Failed to create session on Router 1: %v", err)
 
-    fmt.Print("Execution ended - ACL Permit testcase --------\n\n")
+    }
+    defer router1Session.Close()
 
+    router1Output, err := router1Session.CombinedOutput(OutputCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+    }
+    fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
+    rip_lib.Validation("Authentication Mode: md5  Keychain: rip",string(router1Output))
+    fmt.Printf("Testcase Ended -----\n\n")
     return nil
-
 }
-
-func TestAclPermitDevices(t *testing.T){
-    err := ACLPermitonDevices("10.133.35.150", "acltemp", "10 permit icmp 192.168.10.2/24 any", "in", "ethernet 1/1", "192.168.10.1")
+    
+func TestRipAuthentication(t *testing.T){
+    err := RipAuthentication("10.133.35.143","Ethernet1/11")
     if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err)
+        t.Errorf("Failed to enable RipAuthentication on device: %v", err)
     }
-
 }
 
-// ----------- Testcase Ended ----------------
 
-
-
-// ----------- Testcase 4: ACL Deny Testcase ------------------
-func ACLDenyonDevices(ip string, acl_namee string, rulee string, boundd string, interf string, ping_ip string) error {
-    acl_name := acl_namee
-    rule := rulee
-    bound := boundd
-    intf := interf
-    serverAddress := ip
+func RipMaxPaths(deviceIP string, interf string)error {
+    serverAddress := deviceIP
     serverUsername := "admin"
     serverPassword := "tcs123"
-    server2_address := ping_ip
-    executeCommand := "ping "+string(server2_address)
+    OutputCommand := "show ip rip"
 
-    fmt.Printf("\nTestcase 4: Executing ACL Deny ---------\n")
+    fmt.Printf("\nTestcase Started: RIP Max Paths -----\n")
 
     config := &ssh.ClientConfig{
         User: serverUsername,
@@ -493,13 +480,6 @@ func ACLDenyonDevices(ip string, acl_namee string, rulee string, boundd string, 
     }
     defer client.Close()
 
-    // configuration
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-    acl_lib.Configure_acl_on_interface(serverAddress, acl_name, intf, bound)
-
-    fmt.Printf("ACL enabled on device %s %s via %s\n", serverAddress, intf, bound)
-
-    // new session for ping
     session, err := client.NewSession()
     if err !=nil {
         panic(err)
@@ -513,49 +493,77 @@ func ACLDenyonDevices(ip string, acl_namee string, rulee string, boundd string, 
     }
      if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
         panic(err)
+        panic(err)
     }
 
-    output1, err := session.CombinedOutput(string(executeCommand))
+    sshShell, err := session.StdinPipe()
     if err != nil {
-        log.Fatal(err)
+        panic(err)
     }
-    fmt.Printf("Ping Statistics------\n %s\n", output1)
 
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-    acl_lib.Unconfigure_acl_on_interface(serverAddress, acl_name, intf, bound)
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
 
-    fmt.Print("Execution ended - ACL Deny testcase -------------\n\n")
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("router rip 2\n"),
+            fmt.Sprintf("address-family ipv4 unicast\n"),
+            fmt.Sprintf("maximum-paths 5\n"),
+            "end\n",
+    }
 
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    fmt.Printf("Rip authentication successfully verified on %s via %s\n",deviceIP,interf)
+
+    router1Config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", serverAddress+":22", router1Config)
+    if err !=nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+    router1Output, err := router1Session.CombinedOutput(OutputCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+    }
+    fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
+    rip_lib.Validation("Max-paths: 5",string(router1Output))
+    fmt.Printf("Testcase Ended -----\n\n")
     return nil
-
 }
 
-func TestAclDenyDevices(t *testing.T){
-    err1 := ACLDenyonDevices("10.133.35.150", "acltemp", "10 deny icmp 192.168.5.1/24 any", "in", "Ethernet1/5", "192.168.5.2")
-    if err1 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err1)
+func TestRipMaxPaths(t *testing.T){
+    err := RipMaxPaths("10.133.35.143","Ethernet1/11")
+    if err != nil {
+        t.Errorf("Failed to enable RipMaxPaths on device: %v", err)
     }
 }
 
-// ----------- Testcase Ended ----------------
 
-
-// ----------- ACL with Multiple Rules Testcase ------------------
-func ACLWithMultipleRules(ip string, acl_namee string, rulee string, boundd string, interf string, ping_ip string, message string) error {
-    acl_name := acl_namee
-    rule := rulee
-    bound := boundd
-    intf := interf
-    msg := message
-    serverAddress := ip
+func RipRedistribution(deviceIP string, interf string, rip_name string) error {
+    serverAddress := deviceIP
     serverUsername := "admin"
     serverPassword := "tcs123"
-    server2Address := ping_ip
-    executeCommand := "ping "+string(server2Address)
+    OutputCommand := "show ip rip"
 
-    fmt.Printf("\nTestcase 5: Executing ACL with Multiple Rules -------\n")
-    fmt.Printf("%s\n", msg)
+    fmt.Printf("\nTestcase Started: Rip Redistribution -----\n")
 
     config := &ssh.ClientConfig{
         User: serverUsername,
@@ -571,13 +579,6 @@ func ACLWithMultipleRules(ip string, acl_namee string, rulee string, boundd stri
     }
     defer client.Close()
 
-    // configure
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-    acl_lib.Configure_acl_on_interface(serverAddress, acl_name, intf, bound)
-
-    fmt.Printf("ACL %s enabled on device %s %s via %s\n", acl_name, serverAddress, intf, bound)
-
-    //New Session for Ping
     session, err := client.NewSession()
     if err !=nil {
         panic(err)
@@ -589,60 +590,259 @@ func ACLWithMultipleRules(ip string, acl_namee string, rulee string, boundd stri
             ssh.TTY_OP_ISPEED: 14400,
             ssh.TTY_OP_OSPEED: 14400,
     }
-    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
         panic(err)
     }
 
-    output1, err := session.CombinedOutput(string(executeCommand))
+    sshShell, err := session.StdinPipe()
     if err != nil {
-        log.Fatal(err)
+        panic(err)
     }
-    fmt.Printf("Ping Statistics ------\n %s\n", output1)
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
 
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-    acl_lib.Unconfigure_acl_on_interface(serverAddress, acl_name, intf, bound)
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("router rip %s\n", rip_name),
+            fmt.Sprintf("address-family ipv4 unicast\n"),
+            fmt.Sprintf("redistribute ospf 1 route-map rip\n"),
+            fmt.Sprintf("route-map rip permit\n"),
+            "end\n",
+    }
 
-    fmt.Print("Execution ended - ACL with Multiple Rules Testcase\n\n")
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    fmt.Printf("RipRedistribution successfully verified on %s via %s\n",deviceIP,interf)
 
+    // New Session
+    router1Config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    router1Client, err := ssh.Dial("tcp", serverAddress+":22", router1Config)
+    if err !=nil {
+        log.Fatalf("Failed to connect to Router 1: %v", err)
+    }
+    defer router1Client.Close()
+
+    router1Session, err := router1Client.NewSession()
+    if err != nil {
+        log.Fatalf("Failed to create session on Router 1: %v", err)
+
+    }
+    defer router1Session.Close()
+
+    router1Output, err := router1Session.CombinedOutput(OutputCommand)
+    if err != nil {
+        fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+    }
+    fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
+    rip_lib.Validation("ospf-1          policy rip",string(router1Output))
+    fmt.Printf("Testcase Ended -----\n\n")
     return nil
 }
 
-func TestAclMultipleRulesDevices(t *testing.T){
-    err := ACLWithMultipleRules("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "Part 1: Permitting")
+func TestRipRedistribution(t *testing.T) {
+    err := RipRedistribution("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err)
+        t.Errorf("Failed to enable RipRedistribution on device: %v", err)
     }
 
-    err1 := ACLWithMultipleRules("10.133.35.150", "acltemp","deny icmp 192.168.10.2/24 any", "in", "Ethernet1/1", "192.168.10.1", "Part 2: Denying")
+}
+
+
+// ----------- CLEANUP SECTION -----------
+// Function to clean RIP Passive testcase
+func CleaningRIPpassive(deviceIP string, interf string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("int %s\n",interf),
+            fmt.Sprintf("no ip rip passive-interface\n"),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// Function to clean RIP Timers, Distance, Max Paths, Redistribution testcases
+func CleaningRIPDistanceTimers(deviceIP string, interf string, rip_name string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("router rip %s\n",rip_name),
+            fmt.Sprintf("no address-family ipv4 unicast\n"),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// Function to clean RIP Authentication
+func CleaningRIPAuthenticationRedisMaxpaths(deviceIP string, interf string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
+    config := &ssh.ClientConfig{
+        User: serverUsername,
+        Auth: []ssh.AuthMethod{
+            ssh.Password(serverPassword),
+        },
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    }
+    client, err := ssh.Dial("tcp", serverAddress+":22", config)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+    session, err := client.NewSession()
+    if err !=nil {
+        panic(err)
+    }
+    defer session.Close()
+    modes := ssh.TerminalModes{
+            ssh.ECHO: 0,
+            ssh.TTY_OP_ISPEED: 14400,
+            ssh.TTY_OP_OSPEED: 14400,
+    }
+    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
+        panic(err)
+    }
+    sshShell, err := session.StdinPipe()
+    if err != nil {
+        panic(err)
+    }
+    if err :=session.Shell(); err !=nil {
+        panic(err)
+    }
+    commands := []string{
+            "conf t\n",
+            fmt.Sprintf("no key chain rip\n"),
+            fmt.Sprintf("int %s\n",interf),
+            fmt.Sprintf("no ip rip authentication key-chain rip\n"),
+            fmt.Sprintf("no ip rip authentication mode md5\n"),
+            "end\n",
+    }
+    for _,cmd := range commands {
+        sshShell.Write([]byte(cmd))
+        time.Sleep(1 * time.Second)
+    }
+    return nil
+}
+
+// ------------------------------------------
+
+// Testcase to Call all CLEANUP Functions
+
+func TestCleanup(t *testing.T) {
+
+    err := CleaningRIPpassive("10.133.35.143","Ethernet1/11")
+    if err != nil {
+        t.Errorf("Failed to enable Rip Passice on device: %v", err)
+    }
+
+    err1 := CleaningRIPDistanceTimers("10.133.35.143","Ethernet1/11", "riptemp")
     if err1 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err1)
+        t.Errorf("Failed to clean Rip on device: %v", err1)
     }
 
-    err2 := ACLWithMultipleRules("10.133.35.152", "acltemp", "deny icmp 192.168.5.2/24 any", "in", "Ethernet1/5", "192.168.5.1", "Part 3: Denying")
+    err2 := CleaningRIPAuthenticationRedisMaxpaths("10.133.35.143","Ethernet1/11")
     if err2 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err2)
+        t.Errorf("Failed to enable Rip Authentication on device: %v", err2)
     }
+
 }
 
-// ----------- Testcase Ended ----------------
 
-
-// ----------- ACL - In & Out Bounds Testcase --------------
-func ACLinoutBound(ip string, acl_namee string, rulee string, boundd string, interf string, ping_ip string, message string) error {
-    acl_name := acl_namee
-    rule := rulee
-    bound := boundd
+func DisableRiponDevices(deviceIP string, interf string, ripName string) error {
+    serverAddress := deviceIP
+    serverUsername := "admin"
+    serverPassword := "tcs123"
     intf := interf
-    msg := message
-    serverAddress := ip
-    serverUsername := "admin"
-    serverPassword := "tcs123"
-    server2Address := ping_ip
-    executeCommand := "ping "+string(server2Address)
+    rip_name := ripName
 
-    fmt.Printf("\nTestcase 6: Executing ACL with Multiple Rules -------\n")
-    fmt.Printf("%s\n", msg)
+    fmt.Printf("\nTestcase Started: Disable Rip -----\n")
 
     config := &ssh.ClientConfig{
         User: serverUsername,
@@ -658,389 +858,30 @@ func ACLinoutBound(ip string, acl_namee string, rulee string, boundd string, int
     }
     defer client.Close()
 
-    // configure
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-    acl_lib.Configure_acl_on_interface(serverAddress, acl_name, intf, bound)
+    // unconfigure
+    rip_lib.Unconfigure_rip_on_device(serverAddress, rip_name)
+    rip_lib.Unconfigure_rip_on_interface(serverAddress, intf, rip_name)
 
-    fmt.Printf("ACL %s enabled on device %s %s via %s\n", acl_name, serverAddress, intf, bound)
+    rip_lib.Disable_rip(serverAddress)
 
-    //New Session for Ping
-    session, err := client.NewSession()
-    if err !=nil {
-        panic(err)
-    }
-    defer session.Close()
+    fmt.Printf("RIP disabled on device %s %s\n", serverAddress,intf)
 
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-    if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    output1, err := session.CombinedOutput(string(executeCommand))
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("Ping Statistics ------\n %s\n", output1)
-
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-    acl_lib.Unconfigure_acl_on_interface(serverAddress, acl_name, intf, bound)
-
-    fmt.Print("Execution ended - ACL with Multiple Rules Testcase----------\n\n")
-
+    fmt.Printf("Testcase Ended -----\n\n")
     return nil
 }
 
-func TestACLinoutBound(t *testing.T){
-    err := ACLinoutBound("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "In Bound")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err)
-    }
+func TestDisableRip(t *testing.T) {
+//    err2 := DisableRiponDevices("10.133.35.148","Ethernet1/11", "riptemp")
+    err3 := DisableRiponDevices("10.133.35.143","Ethernet1/11", "riptemp")
 
-    err1 := ACLinoutBound("10.133.35.150", "acltemp","permit icmp 192.168.10.2/24 any", "out", "Ethernet1/1", "192.168.10.1", "Out Bound")
-    if err1 != nil {
-        t.Errorf("Failed to enable ACL on device: %v", err1)
-    }
-}
-
-// ----------- Testcase Ended ----------------
-
-
-
-// ----------- Checking acl configured on device Testcase ------------------
-func Acl_configured_on_router(ip string, acl_namee string, rulee string) error {
-    acl_name := acl_namee
-    rule := rulee
-
-    serverAddress := ip
-    serverUsername := "admin"
-    serverPassword := "tcs123"
-    executeCommand1 := "show ip access-list"
-
-    fmt.Printf("\nTestcase 7: Checking acl configured on device ------\n")
-
-    config := &ssh.ClientConfig{
-        User: serverUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(serverPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-
-    client, err := ssh.Dial("tcp", serverAddress+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // Configure
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-
-    // New Session
-    session, err := client.NewSession()
-    if err !=nil {
-        panic(err)
-    }
-    defer session.Close()
-
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    // executing command
-    fetching_acls, err := session.CombinedOutput(string(executeCommand1))
-    if err != nil {
-        log.Fatal(err)
-    }
-    // validating
-    match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
-    if match1 == true {
-        fmt.Printf("Success: acl %s  is present and configured on router\n", acl_name)
-    } else {
-        fmt.Printf("Failed: acl %s is NOT present and configured on router\n", acl_name)
-    }
-
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-    fmt.Printf("\nTestcase : Checking acl configured on device - Ended ---------\n\n")
-
-    return nil
-}
-
-func Test_Acl_configured_on_router(t *testing.T){
-    err := Acl_configured_on_router("10.133.35.148","acltemp", "10 permit icmp any any")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
-}
-
-// ----------- Testcase Ended ----------------
-
-
-// ----------- Checking acl not configured on Device Testcase ------------------
-func Acl_not_configured_on_router(ip string, acl_namee string) error {
-    acl_name := acl_namee
-
-    serverAddress := ip
-    serverUsername := "admin"
-    serverPassword := "tcs123"
-    executeCommand1 := "show ip access-list"
-
-    fmt.Printf("\nTestcase 8: Checking acl - not configured on device ---------\n")
-
-    config := &ssh.ClientConfig{
-        User: serverUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(serverPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-
-    client, err := ssh.Dial("tcp", serverAddress+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // New Session
-    session, err := client.NewSession()
-    if err !=nil {
-        panic(err)
-    }
-    defer session.Close()
-
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    // executing command
-    fetching_acls, err := session.CombinedOutput(string(executeCommand1))
-    if err != nil {
-        log.Fatal(err)
-    }
-    // validating
-    match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
-    if match1 == true {
-        fmt.Printf("acl %s  is configured\n", acl_name)
-        fmt.Printf("Failed: acl is present and configured\n")
-    } else {
-        fmt.Printf("acl %s  is NOT configured\n", acl_name)       //main condition for this testcase
-        fmt.Printf("Success: acl is NOT present and NOT configured\n")
-    }
-
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
- 
-    fmt.Printf("Testcase - Checking acl - not configured on device - Ended --------\n\n")
-
-    return nil
-}
-
-func Test_Acl_not_configured_on_router(t *testing.T){
-    err := Acl_not_configured_on_router("10.133.35.148","acltemp")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
+//    if err2 != nil {
+//        t.Errorf("Failed to disable RIP on device: %v", err2)
+//    }
+    if err3 != nil {
+        t.Errorf("Failed to disable RIP on device: %v", err3)
     }
 }
 
 
-// ----------- Testcase Ended ----------------
+//-------------------------------------------------------------------------
 
-
-// ----------- Checking acl configured on Interface Testcase ------------------
-func Acl_configured_on_interface(ip string, acl_namee string, rulee string, boundd string, interf string) error {
-    acl_name := acl_namee
-    rule := rulee
-    intf := interf
-    bound := boundd
-
-    serverAddress := ip
-    serverUsername := "admin"
-    serverPassword := "tcs123"
-    executeCommand := "show running-config interface "+string(intf)
-
-    fmt.Printf("\nTestcase 9: Checking acl configured on interface ------\n\n")
-
-    config := &ssh.ClientConfig{
-        User: serverUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(serverPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-
-    client, err := ssh.Dial("tcp", serverAddress+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // Configure
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-    acl_lib.Configure_acl_on_interface(serverAddress, acl_name, intf, bound)
-
-    // New Session
-    session, err := client.NewSession()
-    if err !=nil {
-        panic(err)
-    }
-    defer session.Close()
-
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    // executing command
-    fetching_acls, err := session.CombinedOutput(string(executeCommand))
-    if err != nil {
-        log.Fatal(err)
-    }
-    // validating
-    match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
-    if match1 == true {
-        fmt.Printf("Success: acl %s is present and configured on interface %s\n", acl_name, intf)
-    } else {
-        fmt.Printf("Failed: acl %s is NOT present and configured on interface %s\n", acl_name, intf)
-    }
-
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-    acl_lib.Unconfigure_acl_on_interface(serverAddress, acl_name, intf, bound)
-
-    fmt.Printf("\nTestcase : Checking acl configured on interface - Ended\n")
-
-    return nil
-}
-
-func Test_Acl_configured_on_interface(t *testing.T){
-    err := Acl_configured_on_interface("10.133.35.148","acltag", "10 permit icmp any any", "out", "ethernet 1/1")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
-}
-
-// ----------- Testcase Ended ----------------
-
-
-// ----------- Checking acl not configured on Interface Testcase ------------------
-func Acl_not_configured_on_interface(ip string, acl_namee string, rulee string, interf string) error {
-    acl_name := acl_namee
-    rule := rulee
-    intf := interf
-
-    serverAddress := ip
-    serverUsername := "admin"
-    serverPassword := "tcs123"
-    executeCommand := "show running-config interface "+string(intf)
-
-    fmt.Printf("\nTestcase 10: Checking acl not configured on interface -------\n")
-
-    config := &ssh.ClientConfig{
-        User: serverUsername,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(serverPassword),
-        },
-        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-    }
-
-    client, err := ssh.Dial("tcp", serverAddress+":22", config)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // New Session
-    session, err := client.NewSession()
-    if err !=nil {
-        panic(err)
-    }
-    defer session.Close()
-    modes := ssh.TerminalModes{
-            ssh.ECHO: 0,
-            ssh.TTY_OP_ISPEED: 14400,
-            ssh.TTY_OP_OSPEED: 14400,
-    }
-     if err := session.RequestPty("vt100", 0, 0, modes); err != nil {
-        panic(err)
-    }
-
-    // configure
-    acl_lib.Configure_acl_on_device(serverAddress, acl_name, rule)
-
-    // executing command
-    fetching_acls, err := session.CombinedOutput(string(executeCommand))
-    if err != nil {
-        log.Fatal(err)
-    }
-    // validating
-    match1, err := regexp.MatchString(string(acl_name), string(fetching_acls))
-    if match1 == true {
-        fmt.Printf("acl %s  is configured\n", acl_name)
-        fmt.Printf("Failed: acl %s is present and configured on interface %s\n", acl_name, intf)
-    } else {
-        fmt.Printf("acl %s  is NOT configured\n", acl_name)       //main condition for this testcase
-        fmt.Printf("Success: acl %s is NOT present and NOT configured on interface %s\n", acl_name, intf)
-    }
-
-    // Cleanup
-    acl_lib.Unconfigure_acl_on_device(serverAddress, acl_name)
-
-    fmt.Printf("\nTestcase : Checking acl configured on interface - Ended --------\n\n")
-
-    return nil
-}
-
-func Test_Acl_not_configured_on_interface(t *testing.T){
-    err := Acl_not_configured_on_interface("10.133.35.148","acltemp", "10 permit icmp any any", "ethernet 1/1")
-    if err != nil {
-        t.Errorf("Failed to enable ACL on device: %v\n", err)
-    }
-}
-
-// ----------- Testcase Ended ----------------
-
-
-func TestAllAclTests(t *testing.T) {
-    var testResults TestResults
-
-    // Run each test case and record the result
-    testResults.AddResult("Configure Interfaces Testcase", true, Configure_Interfaces_testcase("10.133.35.148","Ethernet 1/1", "192.168.10.1/24","Ethernet 1/5","192.168.5.1/24"))
-    testResults.AddResult("Configure ACL Testcase", true, Configure_acl_testcase("10.133.35.148", "acltemp", "5 permit icmp any any"))
-    testResults.AddResult("Unconfigure ACL Testcase", true, Unconfigure_acl_testcase("10.133.35.148", "acltemp"))
-    testResults.AddResult("ACL Permit Devices Testcase", true, ACLPermitonDevices("10.133.35.150", "acltemp", "10 permit icmp 192.168.10.2/24 any", "in", "ethernet 1/1", "192.168.10.1"))
-    testResults.AddResult("ACL Deny Devices Testcase", true, ACLDenyonDevices("10.133.35.150", "acltemp", "10 deny icmp 192.168.5.1/24 any", "in", "Ethernet1/5", "192.168.5.2"))
-    testResults.AddResult("ACL with Multiple Rules Testcase", true, ACLWithMultipleRules("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "Part 1: Permitting"))
-    testResults.AddResult("ACL - In & Out Bounds Testcase", true, ACLinoutBound("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any", "in", "Ethernet1/1", "192.168.10.2", "In Bound"))
-    testResults.AddResult("ACL Configured on Router Testcase", true, Acl_configured_on_router("10.133.35.148", "acltemp", "permit icmp 192.168.10.1/24 any"))
-    testResults.AddResult("ACL not Configured on Router Testcase", true, Acl_not_configured_on_router("10.133.35.148", "acltemp"))
-    testResults.AddResult("Acl configured on interface Testcase", true, Acl_configured_on_interface("10.133.35.148","acltag", "10 permit icmp any any", "out", "ethernet 1/1"))
-   testResults.AddResult("Acl not configured on interface Testcase", true, Acl_not_configured_on_interface("10.133.35.148","acltemp", "10 permit icmp any any", "ethernet 1/1"))
-
-    // Print test results
-    for _, result := range testResults {
-        if result.Passed {
-            fmt.Printf("Test '%s' passed.\n", result.TestName)
-        } else {
-            fmt.Printf("Test '%s' failed.\n", result.TestName)
-        }
-    }
-}
