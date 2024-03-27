@@ -2,12 +2,14 @@ package rip
 import "rip/rip_lib"
 import (
     "fmt"
+    "github.com/tealeg/xlsx"
     "golang.org/x/crypto/ssh"
     "log"
     "testing"
     "time"
+    "os"
 )
-
+var testResults = make(map[string]string)
 func EnableRiponDevices(deviceIP string, interf string, intf_ip string, ripName string) error {
     serverAddress := deviceIP
     serverUsername := "admin"
@@ -44,6 +46,7 @@ func EnableRiponDevices(deviceIP string, interf string, intf_ip string, ripName 
 }
 
 func TestEnableRip(t *testing.T) {
+    testCaseName := "Test Enable Rip"
 //    err2 := EnableRiponDevices("10.133.35.148","Ethernet1/11", "192.168.3.1/24", "riptemp")
     err3 := EnableRiponDevices("10.133.35.143","Ethernet1/11", "192.168.3.1/24", "riptemp")
     
@@ -52,8 +55,12 @@ func TestEnableRip(t *testing.T) {
 //    }
     if err3 != nil {
         t.Errorf("Failed to enable RIP on device: %v", err3)
+        testResults[testCaseName] = "FAILED"
+    } else {
+       testResults[testCaseName] = "PASSED"
     }
 }
+
 
 
 func RipPassive(deviceIP string,interf string, interf_ip string, rip_name string) error {
@@ -142,6 +149,7 @@ func RipPassive(deviceIP string,interf string, interf_ip string, rip_name string
     router1Output, err := router1Session.CombinedOutput(OutputCommand)
     if err != nil {
         fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
     rip_lib.Validation("passive",string(router1Output))
@@ -151,11 +159,16 @@ func RipPassive(deviceIP string,interf string, interf_ip string, rip_name string
 }
 
 func TestRipPassive(t *testing.T){
+    testCaseName := "TestRipPassive"
     err := RipPassive("10.133.35.143","Ethernet1/11", "192.168.3.2/24", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RIP on device: %v", err)
-    } 
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+    }
 }
+
 
 
 // Testcase RipTimers -------------
@@ -241,6 +254,7 @@ func RipTimers(deviceIP string, interf string, rip_name string) error {
     router1Output, err := router1Session.CombinedOutput(OutputCommand)
     if err != nil {
         fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
     rip_lib.Validation("Updates every 10 sec, expire in 60 sec",string(router1Output))
@@ -250,11 +264,16 @@ func RipTimers(deviceIP string, interf string, rip_name string) error {
 }
 
 func TestRipTimers(t *testing.T){
+    testCaseName :=  "Test Rip Timers"
     err := RipTimers("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RipTimers on device: %v", err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
     }
 }
+
 
 
 func RipDistance(deviceIP string, interf string, rip_name string) error {
@@ -339,6 +358,7 @@ func RipDistance(deviceIP string, interf string, rip_name string) error {
     router1Output, err := router1Session.CombinedOutput(OutputCommand)
     if err != nil {
         fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
     rip_lib.Validation("Admin-distance: 100",string(router1Output))
@@ -347,9 +367,13 @@ func RipDistance(deviceIP string, interf string, rip_name string) error {
 }
 
 func TestRipDistance(t *testing.T){
+    testCaseName := "Test Rip Distance"
     err := RipDistance("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RipDistance on device: %v", err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
     }
 }
 
@@ -443,17 +467,22 @@ func RipAuthentication(deviceIP string, interf string)error {
     router1Output, err := router1Session.CombinedOutput(OutputCommand)
     if err != nil {
         fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
     rip_lib.Validation("Authentication Mode: md5  Keychain: rip",string(router1Output))
     fmt.Printf("Testcase Ended -----\n\n")
     return nil
 }
-    
+
 func TestRipAuthentication(t *testing.T){
+    testCaseName := "Test Rip Authentication"
     err := RipAuthentication("10.133.35.143","Ethernet1/11")
     if err != nil {
         t.Errorf("Failed to enable RipAuthentication on device: %v", err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
     }
 }
 
@@ -542,6 +571,7 @@ func RipMaxPaths(deviceIP string, interf string)error {
     router1Output, err := router1Session.CombinedOutput(OutputCommand)
     if err != nil {
         fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
     rip_lib.Validation("Max-paths: 5",string(router1Output))
@@ -550,10 +580,14 @@ func RipMaxPaths(deviceIP string, interf string)error {
 }
 
 func TestRipMaxPaths(t *testing.T){
+    testCaseName := "Test Rip Max Paths"
     err := RipMaxPaths("10.133.35.143","Ethernet1/11")
     if err != nil {
         t.Errorf("Failed to enable RipMaxPaths on device: %v", err)
-    }
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+}
 }
 
 
@@ -642,6 +676,7 @@ func RipRedistribution(deviceIP string, interf string, rip_name string) error {
     router1Output, err := router1Session.CombinedOutput(OutputCommand)
     if err != nil {
         fmt.Printf("Failed to execute ping command on Router 1: %v", err)
+        return fmt.Errorf("failed to execute command on Router 1: %w",err)
     }
     fmt.Printf("Router %s Output:\n%s\n", serverAddress, router1Output)
     rip_lib.Validation("ospf-1          policy rip",string(router1Output))
@@ -650,12 +685,18 @@ func RipRedistribution(deviceIP string, interf string, rip_name string) error {
 }
 
 func TestRipRedistribution(t *testing.T) {
+    testCaseName := "Rip Redistribution"
     err := RipRedistribution("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RipRedistribution on device: %v", err)
+        testResults[testCaseName] = "FAILED"
+    } else {
+        testResults[testCaseName] = "PASSED"
+
     }
 
 }
+
 
 
 // ----------- CLEANUP SECTION -----------
@@ -885,3 +926,126 @@ func TestDisableRip(t *testing.T) {
 
 //-------------------------------------------------------------------------
 
+
+func TestMain(m *testing.M) {
+exitVal := m.Run()
+
+// Prepare to summarize test results
+currentTime := time.Now()
+passedCount, failedCount := 0, 0
+
+// Tally passed and failed tests
+for _, result := range testResults {
+switch result {
+case "PASSED":
+passedCount++
+case "FAILED":
+failedCount++
+}
+}
+totalTests := passedCount + failedCount
+successRate := float64(passedCount) / float64(totalTests) * 100.0
+
+// Print the summary header
+fmt.Println("--------------------------------------------------------------------------------------")
+fmt.Printf("%s INFO |                     Task Result Summary                   |\n", currentTime.Format("2006-01-02 15:04:05"))
+fmt.Println("--------------------------------------------------------------------------------------")
+
+// Print counts for passed, failed, and total tests with headings
+fmt.Printf("%s INFO: %-30s %8s\n", currentTime.Format("2006-01-02 15:04:05"), "Metric", "Count")
+fmt.Println("--------------------------------------------------------------------------------------")
+fmt.Printf("%s INFO: %-30s %8d\n", currentTime.Format("2006-01-02 15:04:05"), "Passed", passedCount)
+fmt.Printf("%s INFO: %-30s %8d\n", currentTime.Format("2006-01-02 15:04:05"), "Failed", failedCount)
+fmt.Printf("%s INFO: %-30s %8d\n", currentTime.Format("2006-01-02 15:04:05"), "TOTAL", totalTests)
+fmt.Printf("%s INFO: %-30s %.2f%%\n", currentTime.Format("2006-01-02 15:04:05"), "Success Rate", successRate)
+fmt.Println("--------------------------------------------------------------------------------------")
+
+// Print the task summary
+fmt.Printf("%s INFO |                         Task Summary                      |\n", currentTime.Format("2006-01-02 15:04:05"))
+fmt.Println("--------------------------------------------------------------------------------------")
+counter := 1
+for testName, result := range testResults {
+fmt.Printf("%s INFO: %-20s %-40s %s\n", currentTime.Format("2006-01-02 15:04:05"), fmt.Sprintf("Testcase%d", counter), testName+":", result)
+counter++
+}
+fmt.Println("--------------------------------------------------------------------------------------")
+
+// Write the results to an Excel file
+file := xlsx.NewFile()
+sheet, err := file.AddSheet("Test Results")
+if err != nil {
+fmt.Printf("Failed to add sheet: %v\n", err)
+os.Exit(1)
+}
+
+// Define cell styles for passed and failed tests
+passedStyle := xlsx.NewStyle()
+passedStyle.Fill = *xlsx.NewFill("solid", "00FF00", "00FF00")
+passedStyle.ApplyFill = true
+failedStyle := xlsx.NewStyle()
+failedStyle.Fill = *xlsx.NewFill("solid", "FF0000", "FF0000")
+failedStyle.ApplyFill = true
+
+// Write test result headers
+row := sheet.AddRow()
+row.AddCell().SetValue("Metric")
+row.AddCell().SetValue("Count")
+
+// Write test result counts
+row = sheet.AddRow()
+row.AddCell().SetValue("Passed")
+passedCell := row.AddCell()
+passedCell.SetValue(passedCount)
+passedCell.SetStyle(passedStyle)
+
+row = sheet.AddRow()
+row.AddCell().SetValue("Failed")
+failedCell := row.AddCell()
+failedCell.SetValue(failedCount)
+failedCell.SetStyle(failedStyle)
+
+row = sheet.AddRow()
+row.AddCell().SetValue("TOTAL")
+row.AddCell().SetValue(totalTests)
+
+row = sheet.AddRow()
+row.AddCell().SetValue("Success Rate")
+row.AddCell().SetValue(fmt.Sprintf("%.2f%%", successRate))
+
+// Add a blank row for spacing
+sheet.AddRow()
+
+// Write individual test results
+counter = 1
+for testName, result := range testResults {
+row = sheet.AddRow()
+row.AddCell().SetValue(fmt.Sprintf("Testcase%d", counter))
+row.AddCell().SetValue(testName)
+cell := row.AddCell()
+cell.SetValue(result)
+if result == "PASSED" {
+cell.SetStyle(passedStyle)
+} else if result == "FAILED" {
+cell.SetStyle(failedStyle)
+}
+counter++
+}
+
+// Specify the full paths where you want to save the Excel file and the testcase file
+excelFilePath := "/home/tcs/sample/ondatra/debug/rip/excel_summary.xlsx"
+testcaseFilePath := "/home/tcs/sample/ondatra/debug/rip/valid_test.go"
+
+// Save the Excel file at the specified path
+if err := file.Save(excelFilePath); err != nil {
+fmt.Printf("Failed to save Excel file at %s: %v\n", excelFilePath, err)
+os.Exit(1)
+}
+
+
+// Print the paths for the testcase file and the Excel sheet file
+fmt.Printf("Path for testcase file: %s\n", testcaseFilePath)
+fmt.Printf("Path for Excel: %s\n", excelFilePath)
+
+// Exit with the appropriate status code
+os.Exit(exitVal)
+}
