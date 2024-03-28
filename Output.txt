@@ -3,56 +3,56 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"testing"
 )
 
-// MultiWriter writes to both a file and stdout.
+// MultiWriter duplicates the output to both stdout and a file.
 type MultiWriter struct {
-	File   *os.File
-	Stdout io.Writer
+	stdout io.Writer
+	file   io.Writer
 }
 
-// Write writes data to both the file and stdout.
-func (w *MultiWriter) Write(p []byte) (n int, err error) {
-	n, err = w.Stdout.Write(p)
+// Write writes data to both the stdout and the file.
+func (mw *MultiWriter) Write(p []byte) (n int, err error) {
+	n, err = mw.stdout.Write(p)
 	if err != nil {
-		return n, err
+		return
 	}
-	_, err = w.File.Write(p)
-	return n, err
+	_, err = mw.file.Write(p)
+	return
 }
 
 func TestMain(m *testing.M) {
-	// Use the specific path for the log file.
+	// Specify the file path for the output file
 	filePath := "/home/tcs/sample/ondatra/debug/rip/test_output.txt"
 
-	// Open the file for writing.
-	logFile, err := os.Create(filePath)
+	// Create or open the file for writing
+	file, err := os.Create(filePath)
 	if err != nil {
-		log.Fatalf("Failed to create log file: %v", err)
+		fmt.Printf("Failed to create file: %s\n", err)
+		os.Exit(1)
 	}
-	defer logFile.Close()
+	defer file.Close()
 
-	// Initialize the MultiWriter to write to both os.Stdout and the log file.
+	// Save the original stdout so we can restore it later
+	originalStdout := os.Stdout
+
+	// Create a MultiWriter to duplicate output to both stdout and the file
 	mw := &MultiWriter{
-		File:   logFile,
-		Stdout: os.Stdout,
+		stdout: io.MultiWriter(os.Stdout, file),
+		file:   file,
 	}
 
-	// Set log output to our MultiWriter.
-	log.SetOutput(mw)
+	// Set the MultiWriter as the output for stdout
+	os.Stdout = mw
 
-	// Inform users where the test output will be written.
-	fmt.Printf("Writing test output to file: %s\n", filePath)
+	// Run the tests
+	exitCode := m.Run()
 
-	// Execute the tests.
-	exitVal := m.Run()
+	// Restore the original stdout
+	os.Stdout = originalStdout
 
-	// Final log entry after testing.
-	log.Printf("Testing completed. Exiting with status: %d\n", exitVal)
-
-	// Exit with the appropriate status code.
-	os.Exit(exitVal)
+	// Exit with the same exit code as the test
+	os.Exit(exitCode)
 }
