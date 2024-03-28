@@ -10,17 +10,28 @@ import (
 // MultiWriter duplicates the output to both stdout and a file.
 type MultiWriter struct {
 	stdout io.Writer
-	file   io.Writer
+	File   *os.File
 }
 
-// Write writes data to both the stdout and the file.
-func (mw *MultiWriter) Write(p []byte) (n int, err error) {
-	n, err = mw.stdout.Write(p)
-	if err != nil {
-		return
+// NewMultiWriter creates a new MultiWriter.
+func NewMultiWriter(stdout io.Writer, file *os.File) *MultiWriter {
+	return &MultiWriter{
+		stdout: stdout,
+		File:   file,
 	}
-	_, err = mw.file.Write(p)
-	return
+}
+
+// Write writes data to both stdout and the file.
+func (mw *MultiWriter) Write(p []byte) (n int, err error) {
+	n1, err := mw.stdout.Write(p)
+	if err != nil {
+		return n1, err
+	}
+	n2, err := mw.File.Write(p)
+	if err != nil {
+		return n2, err
+	}
+	return n1 + n2, nil
 }
 
 func TestMain(m *testing.M) {
@@ -28,21 +39,18 @@ func TestMain(m *testing.M) {
 	filePath := "/home/tcs/sample/ondatra/debug/rip/test_output.txt"
 
 	// Create or open the file for writing
-	file, err := os.Create(filePath)
+	File, err := os.Create(filePath)
 	if err != nil {
 		fmt.Printf("Failed to create file: %s\n", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer File.Close()
 
 	// Save the original stdout so we can restore it later
 	originalStdout := os.Stdout
 
 	// Create a MultiWriter to duplicate output to both stdout and the file
-	mw := &MultiWriter{
-		stdout: io.MultiWriter(os.Stdout, file),
-		file:   file,
-	}
+	mw := NewMultiWriter(os.Stdout, File)
 
 	// Set the MultiWriter as the output for stdout
 	os.Stdout = mw
