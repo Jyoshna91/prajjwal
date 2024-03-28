@@ -1,33 +1,58 @@
 package main
 
 import (
-    "bytes"
-    "log"
-    "os"
-    "os/exec"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"testing"
 )
 
-func main() {
-    // Prepare the go test command
-    cmd := exec.Command("go", "test", "-v", "validcopy_test.go")
+// MultiWriter writes to both a file and stdout.
+type MultiWriter struct {
+	File   *os.File
+	Stdout io.Writer
+}
 
-    // Use a bytes.Buffer to capture stdout and stderr
-    var out bytes.Buffer
-    cmd.Stdout = &out
-    cmd.Stderr = &out
+// Write writes data to both the file and stdout.
+func (w *MultiWriter) Write(p []byte) (n int, err error) {
+	n, err = w.Stdout.Write(p)
+	if err != nil {
+		return n, err
+	}
+	_, err = w.File.Write(p)
+	return n, err
+}
 
-    // Run the command
-    err := cmd.Run()
-    if err != nil {
-        log.Printf("Command execution error: %v", err)
-    }
+func TestMain(m *testing.M) {
+	// Use the specific path for the log file.
+	filePath := "/home/tcs/sample/ondatra/debug/rip/test_output.txt"
 
-    // Output the results to stdout
-    log.Println(out.String())
+	// Open the file for writing.
+	logFile, err := os.Create(filePath)
+	if err != nil {
+		log.Fatalf("Failed to create log file: %v", err)
+	}
+	defer logFile.Close()
 
-    // Write the results to a file
-    outputFilename := "test_output.txt"
-    if err := os.WriteFile(outputFilename, out.Bytes(), 0666); err != nil {
-        log.Fatalf("Failed to write to output file: %v", err)
-    }
+	// Initialize the MultiWriter to write to both os.Stdout and the log file.
+	mw := &MultiWriter{
+		File:   logFile,
+		Stdout: os.Stdout,
+	}
+
+	// Set log output to our MultiWriter.
+	log.SetOutput(mw)
+
+	// Inform users where the test output will be written.
+	fmt.Printf("Writing test output to file: %s\n", filePath)
+
+	// Execute the tests.
+	exitVal := m.Run()
+
+	// Final log entry after testing.
+	log.Printf("Testing completed. Exiting with status: %d\n", exitVal)
+
+	// Exit with the appropriate status code.
+	os.Exit(exitVal)
 }
