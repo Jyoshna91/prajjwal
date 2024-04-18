@@ -8,6 +8,8 @@ import (
     "testing"
     "time"
     "os"
+    "bytes"
+    "io"
 )
 var (
 
@@ -977,7 +979,67 @@ func TestDisableRip(t *testing.T) {
 
 
 //-------------------------------------------------------------------------
+func generateHTMLReport() {
+    htmlFilePath := fmt.Sprintf("%s/TestResults.html", resultsDir)
+    file, err := os.Create(htmlFilePath)
+    if err != nil {
+        fmt.Println("Error creating HTML report file:", err)
+        return
+    }
+    defer file.Close()
 
+    // Gather summary data
+    totalTests := len(testResults)
+    passedTests, failedTests := 0, 0
+    for _, result := range testResults {
+        if result == "PASSED" {
+            passedTests++
+        } else {
+            failedTests++
+        }
+    }
+    successRate := float64(passedTests) / float64(totalTests) * 100
+
+    // Start of the HTML content
+    fmt.Fprintf(file, "<html><head><title>Test Results</title>")
+    fmt.Fprintf(file, "<style>")
+    fmt.Fprintf(file, "body { font-family: Arial, sans-serif; padding: 20px; }")
+    fmt.Fprintf(file, "table { width: 100%%; border-collapse: collapse; }")
+    fmt.Fprintf(file, "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }")
+    fmt.Fprintf(file, "th { background-color: #f4f4f4; }")
+    fmt.Fprintf(file, "</style>")
+    fmt.Fprintf(file, "</head><body>")
+    fmt.Fprintf(file, "<h1>Test Results Summary</h1>")
+    fmt.Fprintf(file, "<table>")
+
+    // Suite details at the top
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Name:</strong> RIP</td></tr>")
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Start Time:</strong> %s</td></tr>", startTime.Format(time.RFC1123))
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Stop Time:</strong> %s</td></tr>", stopTime.Format(time.RFC1123))
+
+    // Summary statistics
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Total Tests:</strong> %d</td></tr>", totalTests)
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Passed Tests:</strong> %d</td></tr>", passedTests)
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Failed Tests:</strong> %d</td></tr>", failedTests)
+    fmt.Fprintf(file, "<tr><td colspan='3'><strong>Success Rate:</strong> %.2f%%</td></tr>", successRate)
+
+    // Header for detailed test case results
+    fmt.Fprintf(file, "<tr><th>Task</th><th>Test Case</th><th>Result</th></tr>")
+
+    // Variables to keep track of the task number
+    taskNumber := 1
+
+    // List each test case
+    for testName, result := range testResults {
+        fmt.Fprintf(file, "<tr><td>Task %d</td><td>%s</td><td>%s</td></tr>", taskNumber, testName, result)
+        taskNumber++
+    }
+
+    fmt.Fprintf(file, "</table>")
+    fmt.Fprintf(file, "</body></html>")
+}
+			  
+			  
 func writeTextReport(file *os.File, total, passed, failed int, rate float64, elapsed time.Duration) {
     fmt.Fprintf(file, "========================================\n")
     fmt.Fprintf(file, "Test Result Summary\n")
@@ -1000,8 +1062,13 @@ func writeTextReport(file *os.File, total, passed, failed int, rate float64, ela
 }
 
 func TestMain(m *testing.M) {
+	setup()
+        startTime = time.Now()
+	exitVal := m.Run()
+	stopTime = time.Now()
+	generateHTMLReport()
 	
-outputFilePath:"/home/tcs/sample/ondatra/debug/rip/test_output.txt"
+/*outputFilePath:"/home/tcs/sample/ondatra/debug/rip/test_output.txt"
 
 File, erros. Create(outputFilePath)
 
@@ -1017,7 +1084,7 @@ origStdout: os. Stdout
 os. Stdout File
 
 defer func() (os. Stdout origStdout)()
-exitVal := m.Run()
+exitVal := m.Run()*/
 
 // Prepare to summarize test results
 currentTime := time.Now()
@@ -1123,7 +1190,7 @@ counter++
 // Specify the full paths where you want to save the Excel file and the testcase file
 excelFilePath := "/home/tcs/sample/ondatra/debug/rip/excel_summary.xlsx"
 testcaseFilePath := "/home/tcs/sample/ondatra/debug/rip/valid_test.go"
-
+Logfilepath := "home/tcs/sample/ondatra/debug/rip/results"
 // Save the Excel file at the specified path
 if err := file.Save(excelFilePath); err != nil {
 fmt.Printf("Failed to save Excel file at %s: %v\n", excelFilePath, err)
@@ -1134,6 +1201,7 @@ os.Exit(1)
 // Print the paths for the testcase file and the Excel sheet file
 fmt.Printf("Path for testcase file: %s\n", testcaseFilePath)
 fmt.Printf("Path for Excel: %s\n", excelFilePath)
+fmt.Printf("Path for Logs: %s\n", Logfilepath)
 
 // Exit with the appropriate status code
 os.Exit(exitVal)
