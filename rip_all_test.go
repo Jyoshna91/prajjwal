@@ -978,6 +978,26 @@ func TestDisableRip(t *testing.T) {
 
 //-------------------------------------------------------------------------
 
+func writeTextReport(file *os.File, total, passed, failed int, rate float64, elapsed time.Duration) {
+    fmt.Fprintf(file, "========================================\n")
+    fmt.Fprintf(file, "Test Result Summary\n")
+    fmt.Fprintf(file, "========================================\n")
+    fmt.Fprintf(file, "Name:             RIP\n")
+    fmt.Fprintf(file, "Start Time:       %s\n", startTime.Format(time.RFC1123))
+    fmt.Fprintf(file, "Stop Time:        %s\n", stopTime.Format(time.RFC1123))
+    fmt.Fprintf(file, "Elapsed Time:     %s\n", elapsed)
+    fmt.Fprintf(file, "Passed Tests:     %d\n", passed)
+    fmt.Fprintf(file, "Failed Tests:     %d\n", failed)
+    fmt.Fprintf(file, "Total Tests:      %d\n", total)
+    fmt.Fprintf(file, "Success Rate:     %.2f%%\n", rate)
+    fmt.Fprintf(file, "========================================\n")
+    fmt.Fprintf(file, "Detailed Results:\n")
+    fmt.Fprintf(file, "========================================\n")
+    for testName, result := range testResults {
+        fmt.Fprintf(file, "Task: %-25s Result: %s\n", testName, result)
+    }
+    fmt.Fprintf(file, "========================================\n")
+}
 
 func TestMain(m *testing.M) {
 	
