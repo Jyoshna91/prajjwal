@@ -9,7 +9,46 @@ import (
     "time"
     "os"
 )
-var testResults = make(map[string]string)
+var (
+
+testResults make(map[string]string)
+
+resultsDir "/home/tcs/sample/ondatra/debug/rip/result
+
+startTime time. Time
+
+stopTime time. Time
+
+func setup() {
+If erros. Stat(resultsDir); os. IsNotExist(err) {
+os.MkdirAll(resultsDir, 0755)
+}
+}
+
+func captureOutput.Andlog(t "testing.T, testName string, testFunc func()) {
+startTime = time. Now()
+var buf bytes.Buffer
+stdout := os. Stdout
+stderr := os. Stderr
+r, w. := os. Pipe()
+os. Stdout = w
+os.Stderr = w
+mw := io.MultiWriter(&buf)
+testFunc()
+w.Close()
+os. Stdout = stdout
+os. Stderr = stderr
+_, err := io.Coру (mw, г)
+if err != nil {
+t.Error("Failed to read from pipe:", err)
+}
+LogFilePath fint. Sprintf("%s/%s.log", resultsDir, testCaseName)
+if err := os.WriteFike(logFilePath, buf.Bytes(), 0644); err != nil {
+	t.Errorf("Failed to write log file for %s:%v", testCaseName,err)
+}
+stopTime = time.Now()
+testResults[testCaseName] = "PASSED"
+			  
 func EnableRiponDevices(deviceIP string, interf string, intf_ip string, ripName string) error {
     serverAddress := deviceIP
     serverUsername := "admin"
@@ -47,6 +86,7 @@ func EnableRiponDevices(deviceIP string, interf string, intf_ip string, ripName 
 
 func TestEnableRip(t *testing.T) {
     testCaseName := "Test Enable Rip"
+	captureOutputAndLog(t, testCaseName, func() {
 //    err2 := EnableRiponDevices("10.133.35.148","Ethernet1/11", "192.168.3.1/24", "riptemp")
     err3 := EnableRiponDevices("10.133.35.143","Ethernet1/11", "192.168.3.1/24", "riptemp")
     
@@ -59,6 +99,7 @@ func TestEnableRip(t *testing.T) {
     } else {
        testResults[testCaseName] = "PASSED"
     }
+})
 }
 
 
@@ -160,6 +201,7 @@ func RipPassive(deviceIP string,interf string, interf_ip string, rip_name string
 
 func TestRipPassive(t *testing.T){
     testCaseName := "TestRipPassive"
+	captureOutputAndLog(t, testCaseName, func() {
     err := RipPassive("10.133.35.143","Ethernet1/11", "192.168.3.2/24", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RIP on device: %v", err)
@@ -167,6 +209,7 @@ func TestRipPassive(t *testing.T){
     } else {
         testResults[testCaseName] = "PASSED"
     }
+})
 }
 
 
@@ -265,6 +308,7 @@ func RipTimers(deviceIP string, interf string, rip_name string) error {
 
 func TestRipTimers(t *testing.T){
     testCaseName :=  "Test Rip Timers"
+	captureOutputandlog(t, testCaseName, func() {
     err := RipTimers("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RipTimers on device: %v", err)
@@ -272,6 +316,7 @@ func TestRipTimers(t *testing.T){
     } else {
         testResults[testCaseName] = "PASSED"
     }
+})
 }
 
 
@@ -368,6 +413,7 @@ func RipDistance(deviceIP string, interf string, rip_name string) error {
 
 func TestRipDistance(t *testing.T){
     testCaseName := "Test Rip Distance"
+	caotureOutputandlog(t, testCaseName, func() {
     err := RipDistance("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RipDistance on device: %v", err)
@@ -375,6 +421,7 @@ func TestRipDistance(t *testing.T){
     } else {
         testResults[testCaseName] = "PASSED"
     }
+})
 }
 
 
@@ -477,6 +524,7 @@ func RipAuthentication(deviceIP string, interf string)error {
 
 func TestRipAuthentication(t *testing.T){
     testCaseName := "Test Rip Authentication"
+	caotureOutputandlog(t, testCaseName, func() {
     err := RipAuthentication("10.133.35.143","Ethernet1/11")
     if err != nil {
         t.Errorf("Failed to enable RipAuthentication on device: %v", err)
@@ -484,6 +532,7 @@ func TestRipAuthentication(t *testing.T){
     } else {
         testResults[testCaseName] = "PASSED"
     }
+})
 }
 
 
@@ -581,6 +630,7 @@ func RipMaxPaths(deviceIP string, interf string)error {
 
 func TestRipMaxPaths(t *testing.T){
     testCaseName := "Test Rip Max Paths"
+	caotureOutputandlog(t, testCaseName, func() {
     err := RipMaxPaths("10.133.35.143","Ethernet1/11")
     if err != nil {
         t.Errorf("Failed to enable RipMaxPaths on device: %v", err)
@@ -588,6 +638,7 @@ func TestRipMaxPaths(t *testing.T){
     } else {
         testResults[testCaseName] = "PASSED"
 }
+})
 }
 
 
@@ -686,6 +737,7 @@ func RipRedistribution(deviceIP string, interf string, rip_name string) error {
 
 func TestRipRedistribution(t *testing.T) {
     testCaseName := "Rip Redistribution"
+	caotureOutputandlog(t, testCaseName, func() {
     err := RipRedistribution("10.133.35.143","Ethernet1/11", "riptemp")
     if err != nil {
         t.Errorf("Failed to enable RipRedistribution on device: %v", err)
@@ -694,7 +746,7 @@ func TestRipRedistribution(t *testing.T) {
         testResults[testCaseName] = "PASSED"
 
     }
-
+})
 }
 
 
