@@ -928,6 +928,23 @@ func TestDisableRip(t *testing.T) {
 
 
 func TestMain(m *testing.M) {
+	
+outputFilePath:"/home/tcs/sample/ondatra/debug/rip/test_output.txt"
+
+File, erros. Create(outputFilePath)
+
+if err != nil {
+
+fmt.Printf("Failed to create file: %s: %v\n", outputFilePath, err) 
+os.Exit(1)
+
+defer File.Close()
+
+origStdout: os. Stdout
+
+os. Stdout File
+
+defer func() (os. Stdout origStdout)()
 exitVal := m.Run()
 
 // Prepare to summarize test results
