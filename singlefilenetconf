@@ -1,0 +1,30 @@
+from ncclient import manager, capabilities
+
+# Repliace router hostname/IP, username, password, and port details
+router_host = "10.133.35.148"
+username = "admin"
+password = "tcs123"
+port = 830
+
+# Interface configuration details (replace with your interface name and desired settings)
+interface_name = "Ethernet1/1"
+ip_address = "192.168.1.1/24"
+description = "Test Interface"
+
+# Edit configuration with interface details (replace placeholders if needed)
+edit_config_operation = f"""
+<configuration>
+  <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+    <interface>
+      <name>{interface_name}</name>
+      <ip>
+        <address>{ip_address}</address>
+      </ip>
+      <description>{description}</description>
+    </interface>
+  </interfaces>
+</configuration>
+"""
+
+with manager.connect(host=router_host, username=username, password=password, port=port) as session:
+        session.edit_config
